@@ -80,12 +80,16 @@ def main(cid):
               f"({lv.get('mainnet_memory')} on the mainnet seed); RSKj with `{dk.get('jvm_heap')}`, timed mining "
               "at a 10 s median in both; k6 on the host.", ""]
     else:
-        L += ["Each run replays the scenario's blocks into one client from an empty database and counts "
+        mainnet = any(cfg.get("scenarios", {}).get(s, {}).get("db") == "mainnet" for s in c["scenarios"])
+        start = ("a hard-link clone of the mainnet seed (`docs/mainnet-db-plan.md`)" if mainnet
+                 else "an empty database")
+        L += [f"Each run replays the scenario's blocks into one client from {start} and counts "
               "only if every block hash matches RSKj's reference replay. Per run: the 10% trimmed mean of "
               "per-block `totalMs` over the blocks at least 90% full. Per cycle: rustock vs RSKj in percent "
               "(negative means rustock is faster). Across cycles: the exact sign test. "
               "`docs/timing-scope.md` says what `totalMs` and each phase cover in each client.", "",
-              f"Docker: both containers limited to {dk.get('cpus')} CPUs and {dk.get('memory')} memory; "
+              f"Docker: both containers limited to {dk.get('cpus')} CPUs and "
+              f"{dk.get('mainnet_memory') if mainnet else dk.get('memory')} memory; "
               f"RSKj with `{dk.get('jvm_heap')}`. Boton: fwd slot runs RSKj on box A and rustock on box B, "
               "rev swaps them, and the cycle's figure is the mean of the two boxes.", ""]
     rows = []

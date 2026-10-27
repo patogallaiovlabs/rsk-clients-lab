@@ -1,0 +1,32 @@
+[2026-10-27T21:44:04Z] rskj e507f4503, rustock ecbacadcf
+[2026-10-27T21:44:30Z] docker mainnet-sim@mainnet c1-rskj: 204 blocks in 15 s
+[2026-10-27T21:44:46Z] docker mainnet-sim@mainnet c2-rskj: 204 blocks in 10 s
+[2026-10-27T21:45:01Z] docker mainnet-sim@mainnet c3-rskj: 204 blocks in 8 s
+[2026-10-27T21:45:14Z] docker mainnet-sim@mainnet c4-rskj: 204 blocks in 9 s
+[2026-10-27T21:45:29Z] docker mainnet-sim@mainnet c5-rskj: 204 blocks in 8 s
+[2026-10-27T21:45:44Z] docker mainnet-sim@mainnet c6-rskj: 204 blocks in 8 s
+[2026-10-27T21:45:44Z] docker mainnet-sim@mainnet after 6 cycles: no data (no complete cycles)
+[2026-10-27T21:46:38Z] docker ecdsa@mainnet c1-rskj: 202 blocks in 48 s
+[2026-10-27T21:47:33Z] docker ecdsa@mainnet c2-rskj: 202 blocks in 49 s
+[2026-10-27T21:48:27Z] docker ecdsa@mainnet c3-rskj: 202 blocks in 47 s
+[2026-10-27T21:49:19Z] docker ecdsa@mainnet c4-rskj: 202 blocks in 47 s
+[2026-10-27T21:50:12Z] docker ecdsa@mainnet c5-rskj: 202 blocks in 47 s
+[2026-10-27T21:51:03Z] docker ecdsa@mainnet c6-rskj: 202 blocks in 46 s
+[2026-10-27T21:51:03Z] docker ecdsa@mainnet after 6 cycles: no data (no complete cycles)
+[2026-10-27T22:05:32Z] rskj e507f4503, rustock ecbacadcf
+[2026-10-27T22:05:34Z] consensus failure: rustock mainnet-sim@mainnet: {'consensus_ok': False, 'records': 0, 'expected': 204, 'first_difference': '< 9003580 0e6bf113fd86e9b0584d9268a215f5978ef072a2a1c6126c7dfca063c3ea0f2f', 'wall_s': 1, 'client': 'rustock', 'artifact': 'clientslab-rustock:ecbacadcf1ed-linux-arm64'}
+[2026-10-27T22:08:17Z] rskj e507f4503, rustock ecbacadcf
+[2026-10-27T22:08:28Z] docker mainnet-sim@mainnet c1-rustock: 204 blocks in 10 s
+[2026-10-27T22:08:39Z] docker mainnet-sim@mainnet c2-rustock: 204 blocks in 9 s
+[2026-10-27T22:08:50Z] docker mainnet-sim@mainnet c3-rustock: 204 blocks in 9 s
+[2026-10-27T22:09:00Z] docker mainnet-sim@mainnet c4-rustock: 204 blocks in 9 s
+[2026-10-27T22:09:11Z] docker mainnet-sim@mainnet c5-rustock: 204 blocks in 9 s
+[2026-10-27T22:09:22Z] docker mainnet-sim@mainnet c6-rustock: 204 blocks in 9 s
+[2026-10-27T22:09:22Z] docker mainnet-sim@mainnet after 6 cycles: rustock slower (rustock faster in 0/6 cycles, median +113.22%, sign-test p=0.03125)
+[2026-10-27T22:09:42Z] docker ecdsa@mainnet c1-rustock: 202 blocks in 19 s
+[2026-10-27T22:10:02Z] docker ecdsa@mainnet c2-rustock: 202 blocks in 18 s
+[2026-10-27T22:10:22Z] docker ecdsa@mainnet c3-rustock: 202 blocks in 18 s
+[2026-10-27T22:10:42Z] docker ecdsa@mainnet c4-rustock: 202 blocks in 18 s
+[2026-10-27T22:11:01Z] docker ecdsa@mainnet c5-rustock: 202 blocks in 18 s
+[2026-10-27T22:11:21Z] docker ecdsa@mainnet c6-rustock: 202 blocks in 18 s
+[2026-10-27T22:11:21Z] docker ecdsa@mainnet after 6 cycles: rustock faster (rustock faster in 6/6 cycles, median -60.40%, sign-test p=0.03125)

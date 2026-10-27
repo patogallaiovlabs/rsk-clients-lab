@@ -78,3 +78,16 @@ RSKj replay cycles here first, then delete this Mac's copy of the RSKj seed (the
 theirs; perf-lab is paused), compact rustock's seed and rebuild its index, run the rustock
 cycles, and copy the compacted seed (about 160 GB) to the boxes. The Docker comparison on the
 mainnet DB is therefore sequential too, and the report says so.
+
+## Finding (2026-10-27, night): the seed runs as regtest
+
+The first rustock replay on the compacted seed diverged at block #9,003,580. The cause was
+the lab's configuration, not the conversion: the sample's transactions carry chain id 33
+(`v = 101`), because perf-lab's RSKj runs on the mainnet seed with `--regtest` and
+`node.props` (regtest consensus on a mainnet state). rustock replayed under `--network-id 30`
+and the activation ladder of `harness/mainnet-overrides`, so it recovered different senders.
+With the regtest configuration of the small chain (`--network-id 33`, `conf/genesis_25M.json`,
+`rskip97=0`, everything else at genesis) and the single trie backend, rustock imports the 204
+blocks of `mainnet-sim@mainnet` with the reference hashes in 12 s. `clients/rustock.json`'s
+`mainnet_*_args` are now that configuration; `harness/mainnet-overrides` stays in the harness
+but this comparison does not use it.
