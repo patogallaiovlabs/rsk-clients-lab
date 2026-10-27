@@ -1,0 +1,8 @@
+{
+  "_doc": "RSKj in the harness. Measured at the head of perf-lab/integration (everything rsk-perf-lab has proven), recorded per campaign.",
+  "repo": "clients/rskj",
+  "ref": "perf-lab/integration",
+  "artifact": "jar",
+  "replay": "co.rsk.cli.tools.ConnectBlocks --regtest --file <blocks>",
+  "settings": "conf/rskj/rsk.conf (rskip144 off, rskip97 at 0), conf/rskj/logback.xml, -Xms2G -Xmx4G, flushNumberOfBlocks 10"
+}

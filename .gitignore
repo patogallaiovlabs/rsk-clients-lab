@@ -1,0 +1,7 @@
+# runtime state and raw run data, never committed
+state/
+campaigns/*/raw/
+samples/*/blocks.txt.gz
+boton/hosts.env
+__pycache__/
+*.pyc

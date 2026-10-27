@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- Simulation-owned logback config (mounted at /var/lib/rsk/logback.xml).
+     Levels still driven by JVM props: logging.stdout, logging.file, logging, logging.dir -->
+<configuration debug="false" scan="true" scanPeriod="3600 seconds">
+
+    <!-- Stdout appender -->
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <Target>System.out</Target>
+        <encoder>
+            <Pattern>
+                %date{yyyy-MM-dd-HH:mm:ss.SSSS} %p [%c{1}] [%thread]%replace( [%mdc{}]){' \[\]', ''}  %m%n
+            </Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${logging.stdout:-OFF}</level>
+        </filter>
+    </appender>
+
+    <!-- Stdout appender for CLI tools -->
+    <appender name="STDOUT_CLI_TOOL" class="ch.qos.logback.core.ConsoleAppender">
+        <Target>System.out</Target>
+        <encoder>
+            <Pattern>
+                %date{yyyy-MM-dd-HH:mm:ss.SSSS} %p [%c{1}] [%thread]%replace( [%mdc{}]){' \[\]', ''}  %m%n
+            </Pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${logging.stdout.clitools:-INFO}</level>
+        </filter>
+    </appender>
+
+    <!-- File appender -->
+    <appender name="FILE-AUDIT" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.dir:-./logs}/rsk.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %date{yyyy-MM-dd-HH:mm:ss.SSSS} %p [%c{1}] [%thread]%replace( [%mdc{}]){' \[\]', ''}  %m%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>./logs/rskj-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>${logging:-WARN}</level>
+        </filter>
+    </appender>
+
+    <!-- Dedicated appender for the block execute/persist breakdown debug logs
+         (BlockExecutor, BlockChainImpl, MutableTrieCache, TrieStoreImpl). Isolated
+         from FILE-AUDIT/root on purpose: raising FILE-AUDIT's own ThresholdFilter to
+         DEBUG to see these lines also unleashes every other already-DEBUG-configured
+         logger (e.g. "general", root-inherited "discover") into rsk.log, which floods
+         it (~1.8MB/block observed) and adds real disk I/O that skews the very block
+         timings being measured. Kept small/focused instead, independent of ${logging}. -->
+    <appender name="BLOCK-BREAKDOWN" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.dir:-./logs}/block-breakdown.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %date{yyyy-MM-dd-HH:mm:ss.SSSS} %p [%c{1}] [%thread]%replace( [%mdc{}]){' \[\]', ''}  %m%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logging.dir:-./logs}/block-breakdown-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+    </appender>
+
+    <!-- Dedicated appender for DataSourceWithCache's async-flush queue-depth tracing
+         (enqueue/drain events, incl. queueDepth/maxQueueDepth). The "datasourcewithcache"
+         logger below is already set to TRACE, but FILE-AUDIT's own ThresholdFilter is
+         ${logging:-WARN} (INFO on the live miners), which silently discards these TRACE
+         events before they ever reach rsk.log, so there is no way to see whether the
+         bounded async-flush backpressure is actually being hit under real load without a
+         separate, unthresholded-by-${logging} appender. Same isolation rationale as
+         BLOCK-BREAKDOWN above. -->
+    <appender name="ASYNC-FLUSH" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${logging.dir:-./logs}/async-flush.log</file>
+        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>
+                %date{yyyy-MM-dd-HH:mm:ss.SSSS} %p [%c{1}] [%thread]%replace( [%mdc{}]){' \[\]', ''}  %m%n
+            </Pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${logging.dir:-./logs}/async-flush-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>7</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>TRACE</level>
+        </filter>
+    </appender>
+
+    <!-- Loggers -->
+    <logger name="execute" level="OFF"/>
+    <logger name="blockvalidator" level="INFO"/>
+    <!-- Kept at its original ERROR level: "blockexecutor" also carries the
+         loggingDiscardedBlock() WARN, which fires once per discarded mempool tx on every
+         candidate-block rebuild and floods logs under load if unblocked. The execute/persist
+         breakdown instrumentation now uses its own "blockexecutor.breakdown" logger below. -->
+    <logger name="blockexecutor" level="ERROR"/>
+    <logger name="blockexecutor.breakdown" level="DEBUG" additivity="false">
+        <appender-ref ref="BLOCK-BREAKDOWN"/>
+    </logger>
+    <logger name="general" level="DEBUG"/>
+    <logger name="gaspricetracker" level="ERROR"/>
+    <logger name="web3" level="INFO"/>
+    <logger name="repository" level="INFO"/>
+    <logger name="VM" level="OFF"/>
+    <logger name="blockqueue" level="INFO"/>
+    <logger name="io.netty" level="INFO"/>
+    <logger name="block" level="INFO"/>
+    <logger name="minerserver" level="ERROR"/>
+    <logger name="txbuilderex" level="INFO"/>
+    <logger name="pendingstate" level="INFO"/>
+    <logger name="hsqldb.db" level="INFO"/>
+    <logger name="TCK-Test" level="INFO"/>
+    <logger name="db" level="INFO"/>
+    <logger name="net" level="WARN"/>
+    <logger name="start" level="INFO"/>
+    <logger name="cli" level="INFO"/>
+    <logger name="txs" level="INFO"/>
+    <logger name="gas" level="ERROR"/>
+    <logger name="main" level="INFO"/>
+    <logger name="trie" level="TRACE"/>
+    <logger name="peermonitor" level="WARN"/>
+    <logger name="bridge" level="INFO"/>
+    <logger name="rlp" level="INFO"/>
+    <logger name="messagehandler" level="WARN"/>
+    <logger name="sync" level="WARN"/>
+    <logger name="BtcToRskClient" level="INFO"/>
+    <logger name="ui" level="INFO"/>
+    <logger name="java.nio" level="WARN"/>
+    <logger name="org.eclipse.jetty" level="WARN"/>
+    <logger name="wire" level="WARN"/>
+    <logger name="BridgeSupport" level="WARN"/>
+    <logger name="jsonrpc" level="OFF"/>
+    <logger name="wallet" level="WARN"/>
+    <!-- additivity stays true (default): "blockchain" already emits a useful INFO-level
+         per-block summary today, which must keep flowing to rsk.log via root exactly as
+         before. Root's own appenders threshold at INFO, so the new DEBUG breakdown line
+         is naturally filtered out there and only reaches the dedicated appender below. -->
+    <logger name="blockchain" level="DEBUG">
+        <appender-ref ref="BLOCK-BREAKDOWN"/>
+    </logger>
+    <logger name="blockprocessor" level="INFO"/>
+    <logger name="asyncblockprocessor" level="INFO"/>
+    <logger name="state" level="INFO">
+        <appender-ref ref="BLOCK-BREAKDOWN"/>
+    </logger>
+    <logger name="org.bitcoinj" level="WARN"/>
+    <logger name="metrics" level="INFO"/>
+    <logger name="messageProcess" level="WARN"/>
+    <logger name="co.rsk.db.migration.OrchidToUnitrieMigrator" level="WARN"/>
+    <logger name="co.rsk.db.migration.MissingOrchidStorageKeysProvider" level="WARN"/>
+    <logger name="blooms" level="WARN"/>
+    <logger name="triestore" level="INFO">
+        <appender-ref ref="BLOCK-BREAKDOWN"/>
+    </logger>
+    <logger name="btcBlockStore" level="WARN" />
+    <logger name="secp256k1" level="DEBUG" />
+    <logger name="altbn128" level="WARN" />
+    <logger name="co.rsk.net.discovery.PeerExplorer" level="WARN" />
+    <logger name="co.rsk.net.discovery.NodeChallengeManager" level="WARN" />
+    <logger name="co.rsk.RskContext" level="INFO" />
+    <logger name="io.netty.handler.logging.LoggingHandler" level="WARN"/>
+    <logger name="co.rsk.net.sync.PeerAndModeDecidingSyncState" level="WARN" />
+    <logger name="org.ethereum.core.Transaction" level="WARN" />
+    <logger name="peerScoring" level="WARN" />
+    <logger name="txpool" level="WARN" />
+    <logger name="syncprocessor" level="INFO" />
+    <logger name="datasourcewithcache" level="TRACE" additivity="false">
+        <appender-ref ref="ASYNC-FLUSH"/>
+    </logger>
+    <logger name="org.ethereum.datasource" level="INFO" />
+
+    <logger name="com.googlecode.jsonrpc4j" level="OFF" />
+
+    <logger name="clitool" level="DEBUG" additivity="false" >
+        <appender-ref ref="STDOUT_CLI_TOOL"/>
+        <appender-ref ref="FILE-AUDIT"/>
+    </logger>
+
+    <root level="DEBUG">
+        <appender-ref ref="stdout"/>
+        <appender-ref ref="FILE-AUDIT"/>
+    </root>
+</configuration>

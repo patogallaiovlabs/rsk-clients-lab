@@ -1,0 +1,8 @@
+[submodule "clients/rskj"]
+	path = clients/rskj
+	url = git@github.com:patogallaiovlabs/rskj.git
+	branch = perf-lab/integration
+[submodule "clients/rustock"]
+	path = clients/rustock
+	url = git@github.com:patogallaiovlabs/rustock.git
+	branch = clients-lab/comparison

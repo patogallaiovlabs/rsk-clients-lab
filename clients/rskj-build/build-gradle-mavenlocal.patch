@@ -1,0 +1,20 @@
+diff --git a/rskj-core/build.gradle b/rskj-core/build.gradle
+index 416c8f7a3..1d8a1f634 100644
+--- a/rskj-core/build.gradle
++++ b/rskj-core/build.gradle
+@@ -279,7 +279,14 @@ tasks.withType(Javadoc) {
+ repositories {
+     // Local ~/.m2 first, so a locally built co.rsk:native SNAPSHOT wins over
+     // the published releases on deps.rsklabs.io.
+-    mavenLocal()
++    // Restricted to co.rsk:native only: without the filter, mavenLocal serves
++    // unrelated deps from ~/.m2 as bare .pom files (no .module), which are not
++    // pinned in gradle/verification-metadata.xml -> dependency verification fails.
++    mavenLocal {
++        content {
++            includeModule("co.rsk", "native")
++        }
++    }
+     mavenCentral()
+     gradlePluginPortal()
+     maven {

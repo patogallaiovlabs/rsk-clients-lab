@@ -1,0 +1,53 @@
+{
+  "_doc": "rsk-clients-lab settings. Read by bin/*.py and bin/*.sh. README.md explains the method.",
+  "clients": ["rskj", "rustock"],
+  "scenarios": {
+    "mainnet-sim": {
+      "description": "k6 option 14 (mainnet-sim): storage writes, ERC-20, native transfers and calldata-heavy rollup txs, about 164 txs per block",
+      "blocks": "samples/mainnet-sim/blocks.txt.gz",
+      "reference_hashes": "samples/mainnet-sim/reference_hashes.txt",
+      "first_block": 1,
+      "last_block": 1159,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "ecdsa": {
+      "description": "k6 option 7 (CPU ECDSA): signature-recovery-heavy contract calls, almost all of each block is transaction execution",
+      "blocks": "samples/ecdsa/blocks.txt.gz",
+      "reference_hashes": "samples/ecdsa/reference_hashes.txt",
+      "first_block": 1,
+      "last_block": 207,
+      "threshold": 0.9,
+      "min_difference_pct": 1.0
+    }
+  },
+  "chain": {
+    "genesis": "conf/genesis_25M.json",
+    "gas_limit": 25000000,
+    "chain_id": 33,
+    "flush_every_blocks": 10
+  },
+  "campaign": {
+    "cycles": 6,
+    "max_cycles": 12,
+    "alpha": 0.05,
+    "trim": 0.1
+  },
+  "docker": {
+    "cpus": 4,
+    "memory": "6g",
+    "jvm_heap": "-Xms2G -Xmx4G",
+    "rskj_image": "eclipse-temurin:17-jre@sha256:38e0afc86a10bf4cadbf1586fb617b3a9a4d09c9a0be882e29ada4ed0895fc84",
+    "rustock_image": "clientslab-rustock"
+  },
+  "boton": {
+    "boxes": ["A", "B"],
+    "box_priority": 2,
+    "remote_dir": "clientslab"
+  },
+  "machines": {
+    "_doc": "Locks shared with rsk-perf-lab in ~/.research-lab/locks (bin/lib.sh). A campaign holds this Mac's Docker slot as a long holder, so perf-lab's short replays and gates go first.",
+    "long_lock_max_wait_min": 30,
+    "min_free_gb": 20
+  }
+}
