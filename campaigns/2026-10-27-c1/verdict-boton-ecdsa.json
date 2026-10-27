@@ -1,0 +1,80 @@
+{
+ "where": "boton",
+ "scenario": "ecdsa",
+ "cycles": 2,
+ "verdict": "extend",
+ "why": "rustock faster in 2/2 cycles, median -59.78%, sign-test p=0.5",
+ "totalMs": {
+  "tmean": {
+   "median_pct": -59.78,
+   "rustock_faster": 2,
+   "n": 2,
+   "p": 0.5,
+   "deltas_pct": [
+    -59.83,
+    -59.74
+   ]
+  },
+  "mean": {
+   "median_pct": -60.47,
+   "rustock_faster": 2,
+   "n": 2,
+   "p": 0.5,
+   "deltas_pct": [
+    -60.5,
+    -60.44
+   ]
+  },
+  "median": {
+   "median_pct": -59.32,
+   "rustock_faster": 2,
+   "n": 2,
+   "p": 0.5,
+   "deltas_pct": [
+    -59.35,
+    -59.29
+   ]
+  }
+ },
+ "phases": {
+  "executeMs": {
+   "median_pct": -59.41,
+   "rustock_faster": 2,
+   "n": 2,
+   "p": 0.5
+  },
+  "initialValidationMs": {
+   "median_pct": -96.78,
+   "rustock_faster": 2,
+   "n": 2,
+   "p": 0.5
+  }
+ },
+ "absolute_ms": {
+  "rskj": {
+   "executeMs": 438.535,
+   "initialValidationMs": 1.81,
+   "onBestBlockMs": 0.0,
+   "onBlockMs": 0.0,
+   "postExecuteValidationMs": 0.0,
+   "preambleMs": 0.0,
+   "processBestMs": 0.0,
+   "saveReceiptsMs": 0.0,
+   "statePersistMs": 0.0,
+   "stateRootRegisterMs": 0.0,
+   "switchChainMs": 0.018,
+   "totalMs": 443.33,
+   "txExecutionMs": 438.267
+  },
+  "rustock": {
+   "executeMs": 178.515,
+   "initialValidationMs": 0.058,
+   "onBestBlockMs": 0.0,
+   "postExecuteValidationMs": 0.001,
+   "preambleMs": 0.0,
+   "saveReceiptsMs": 0.173,
+   "switchChainMs": 0.076,
+   "totalMs": 178.83
+  }
+ }
+}

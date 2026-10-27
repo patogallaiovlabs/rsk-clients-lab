@@ -1,0 +1,13 @@
+{
+  "name": "ecdsa",
+  "blocks": 207,
+  "first_block": 1,
+  "last_block": 207,
+  "blocks_sha256": "165377ec55e370fcd82ae8050dfe0b6da223ec2e9cf7bbf1a3ba5fa0b12a6e4d",
+  "source": {
+    "seed": "seed-genesis-block1.tar.gz",
+    "blocks": "blocks.txt.gz",
+    "block1_exported_with": "rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar"
+  },
+  "imported": "2026-10-26T19:54:16Z"
+}

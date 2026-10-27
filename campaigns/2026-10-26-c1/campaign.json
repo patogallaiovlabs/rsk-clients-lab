@@ -1,0 +1,144 @@
+{
+ "id": "2026-10-26-c1",
+ "dir": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/campaigns/2026-10-26-c1",
+ "status": "done",
+ "queued_at": "2026-10-27T00:52:29Z",
+ "queued_epoch": 1793062349,
+ "where": [
+  "docker"
+ ],
+ "scenarios": [
+  "ecdsa",
+  "mainnet-sim"
+ ],
+ "cycles": 6,
+ "max_cycles": 12,
+ "refs": {
+  "rskj": "perf-lab/integration",
+  "rustock": "clients-lab/harness"
+ },
+ "note": "First campaign: RSKj perf-lab/integration vs rustock (Lerner fork + harness branches), Docker on this Mac.",
+ "results": {
+  "docker/ecdsa": {
+   "verdict": "rustock faster",
+   "why": "rustock faster in 6/6 cycles, median -60.78%, sign-test p=0.03125"
+  },
+  "docker/mainnet-sim": {
+   "verdict": "rustock slower",
+   "why": "rustock faster in 0/6 cycles, median +220.76%, sign-test p=0.03125"
+  }
+ },
+ "started_at": "2026-10-27T00:52:30Z",
+ "shas": {
+  "rskj": "e507f45031cf0e8a71bf571fcdbfbe9aa529a21b",
+  "rustock": "024e2032a6e1cd270fa0cfb27dc14873216adbc4"
+ },
+ "builds": {
+  "rskj": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar",
+  "rustock-docker": "clientslab-rustock:024e2032a6e1-linux-arm64"
+ },
+ "settings": {
+  "config": {
+   "_doc": "rsk-clients-lab settings. Read by bin/*.py and bin/*.sh. README.md explains the method.",
+   "clients": [
+    "rskj",
+    "rustock"
+   ],
+   "scenarios": {
+    "mainnet-sim": {
+     "description": "k6 option 14 (mainnet-sim): storage writes, ERC-20, native transfers and calldata-heavy rollup txs, about 164 txs per block",
+     "blocks": "samples/mainnet-sim/blocks.txt.gz",
+     "reference_hashes": "samples/mainnet-sim/reference_hashes.txt",
+     "first_block": 1,
+     "last_block": 1159,
+     "threshold": 0.9,
+     "min_difference_pct": 2.0
+    },
+    "ecdsa": {
+     "description": "k6 option 7 (CPU ECDSA): signature-recovery-heavy contract calls, almost all of each block is transaction execution",
+     "blocks": "samples/ecdsa/blocks.txt.gz",
+     "reference_hashes": "samples/ecdsa/reference_hashes.txt",
+     "first_block": 1,
+     "last_block": 207,
+     "threshold": 0.9,
+     "min_difference_pct": 1.0
+    }
+   },
+   "chain": {
+    "genesis": "conf/genesis_25M.json",
+    "gas_limit": 25000000,
+    "chain_id": 33,
+    "flush_every_blocks": 10
+   },
+   "campaign": {
+    "cycles": 6,
+    "max_cycles": 12,
+    "alpha": 0.05,
+    "trim": 0.1
+   },
+   "docker": {
+    "cpus": 4,
+    "memory": "6g",
+    "jvm_heap": "-Xms2G -Xmx4G",
+    "rskj_image": "eclipse-temurin:17-jre@sha256:38e0afc86a10bf4cadbf1586fb617b3a9a4d09c9a0be882e29ada4ed0895fc84",
+    "rustock_image": "clientslab-rustock"
+   },
+   "boton": {
+    "boxes": [
+     "A",
+     "B"
+    ],
+    "box_priority": 2,
+    "remote_dir": "clientslab"
+   },
+   "machines": {
+    "_doc": "Locks shared with rsk-perf-lab in ~/.research-lab/locks (bin/lib.sh). A campaign holds this Mac's Docker slot as a long holder, so perf-lab's short replays and gates go first.",
+    "long_lock_max_wait_min": 30,
+    "min_free_gb": 20
+   }
+  },
+  "rskj": {
+   "_doc": "RSKj in the harness. Measured at the head of perf-lab/integration (everything rsk-perf-lab has proven), recorded per campaign.",
+   "repo": "clients/rskj",
+   "ref": "perf-lab/integration",
+   "artifact": "jar",
+   "replay": "co.rsk.cli.tools.ConnectBlocks --regtest --file <blocks>",
+   "settings": "conf/rskj/rsk.conf (rskip144 off, rskip97 at 0), conf/rskj/logback.xml, -Xms2G -Xmx4G, flushNumberOfBlocks 10"
+  },
+  "rustock": {
+   "_doc": "rustock in the harness. Built from the harness adapter branch until its upstream pull requests merge. import_args: rskj's regtest chain as the lab's rsk.conf sets it (genesis file, rskip97=0, rskj's gas-limit bounds, skipPowValidation), the trie in its own RocksDB (a fresh data dir with the default single backend is refused by the fork), flush every {flush} blocks like RSKj.",
+   "repo": "clients/rustock",
+   "ref": "clients-lab/harness",
+   "upstream_ref": "main",
+   "artifact": "binary",
+   "import_args": [
+    "--network-id",
+    "33",
+    "--no-rpc",
+    "--log-to-stdout",
+    "--data-dir",
+    "{datadir}",
+    "--trie-backend",
+    "external",
+    "--trie-dir",
+    "{datadir}-trie",
+    "--genesis",
+    "{genesis}",
+    "--skip-pow-validation",
+    "--consensus-rule",
+    "rskip97=0",
+    "--min-gas-limit",
+    "3000000",
+    "--max-gas-limit",
+    "18446744073709551615",
+    "--import-blocks",
+    "{blocks}",
+    "--import-flush-every",
+    "{flush}",
+    "--breakdown-log",
+    "{breakdown}"
+   ]
+  }
+ },
+ "finished_at": "2026-10-27T04:07:04Z"
+}

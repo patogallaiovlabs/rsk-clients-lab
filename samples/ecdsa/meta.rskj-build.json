@@ -1,0 +1,4 @@
+{"name": "ecdsa", "k6_option": 7, "gas_limit": 25000000, "threshold": 0.9,
+ "blocks": 206, "from_block": 2, "to_block": 207, "qualifying_at_build": 203,
+ "mined_with": "392ae55061028570b4c7a36fddcd4c1441c90005", "built": "2026-10-21T20:46:57Z",
+ "node": "single miner, no peers, 4 CPUs, 4 GB heap, rsk/rsk.conf, timed mining 10 s median"}
