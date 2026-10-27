@@ -69,6 +69,7 @@ def queue(a):
     os.makedirs(d)
     c = {"id": cid, "dir": d, "status": "queued", "queued_at": now(), "queued_epoch": int(time.time()),
          "kind": a.kind, "where": a.where.split(","), "scenarios": a.scenarios.split(","),
+         "clients": a.clients.split(","),
          "cycles": a.cycles or CFG["campaign"]["cycles"], "max_cycles": CFG["campaign"]["max_cycles"],
          "refs": {"rskj": a.rskj or json.load(open(os.path.join(LAB, "clients/rskj.json")))["ref"],
                   "rustock": a.rustock or json.load(open(os.path.join(LAB, "clients/rustock.json")))["ref"]},
@@ -95,7 +96,7 @@ def resolve(c):
     c["shas"] = shas
     c["builds"] = {"rskj": sh([os.path.join(BIN, "build-client.sh"), "rskj", shas["rskj"]]).stdout.strip().splitlines()[-1]}
     # Release and Docker builds of rustock are heavy: run them in the shared Docker slot.
-    if "docker" in c["where"]:
+    if "docker" in c["where"] and "rustock" in c.get("clients", ["rskj", "rustock"]):
         sh([os.path.join(BIN, "with-lock.sh"), os.path.join(BIN, "build-client.sh"), "rustock", shas["rustock"], "linux-arm64"])
         c["builds"]["rustock-docker"] = f"clientslab-rustock:{shas['rustock'][:12]}-linux-arm64"
     if "boton" in c["where"]:
@@ -168,10 +169,13 @@ def run_docker(c, scen):
         k += 1
         if k > c["max_cycles"]:
             break
-        if all(os.path.exists(os.path.join(d, f"c{k}-{x}", "consensus.json")) for x in ("rskj", "rustock")) \
-                and stats.per_block(os.path.join(d, f"c{k}-rskj")) and stats.per_block(os.path.join(d, f"c{k}-rustock")):
+        # A sequential campaign (docs/mainnet-db-plan.md) runs one client's cycles now and the
+        # other's later with `run --clients`; a cycle is complete when every listed client is.
+        clients = tuple(c.get("clients", ["rskj", "rustock"]))
+        if all(os.path.exists(os.path.join(d, f"c{k}-{x}", "consensus.json")) and stats.per_block(os.path.join(d, f"c{k}-{x}"))
+               for x in clients):
             continue  # done in an earlier attempt
-        order = ("rskj", "rustock") if k % 2 else ("rustock", "rskj")
+        order = clients if k % 2 or len(clients) == 1 else tuple(reversed(clients))
         # One cycle holds the Docker slot as a long holder: perf-lab's short replays and gates
         # may run between cycles, never between the two runs of one cycle.
         env = {"CLIENTSLAB_PRIORITY": str(c["queued_epoch"])}
@@ -190,6 +194,8 @@ def run_docker(c, scen):
             log(f"docker {scen} after {k} cycles: {v['verdict']} ({v['why']})", c)
             if v["verdict"] != "extend":
                 break
+            if len(clients) == 1 and k >= c["cycles"]:
+                break  # one client alone cannot be judged; the other half decides later
     v = stats.judge("docker", d, scen)
     json.dump(v, open(os.path.join(c["dir"], f"verdict-docker-{scen}.json"), "w"), indent=1)
     return v
@@ -281,15 +287,18 @@ def main():
     q.add_argument("--scenarios", default="mainnet-sim,ecdsa")
     q.add_argument("--cycles", type=int)
     q.add_argument("--rskj"); q.add_argument("--rustock"); q.add_argument("--note")
-    sp.add_parser("run").add_argument("id")
+    q.add_argument("--clients", default="rskj,rustock", help="run only these clients' cycles now (sequential campaigns)")
+    r = sp.add_parser("run"); r.add_argument("id"); r.add_argument("--clients", help="the clients to run in this pass")
     sp.add_parser("next")
     sp.add_parser("status").add_argument("id", nargs="?")
     cy = sp.add_parser("_cycle")
-    cy.add_argument("id"); cy.add_argument("scen"); cy.add_argument("k", type=int); cy.add_argument("order", nargs=2)
+    cy.add_argument("id"); cy.add_argument("scen"); cy.add_argument("k", type=int); cy.add_argument("order", nargs="+")
     a = ap.parse_args()
     if a.cmd == "queue":
         queue(a)
     elif a.cmd == "run":
+        if a.clients:
+            c = load(a.id); c["clients"] = a.clients.split(","); save(c)
         run(a.id)
     elif a.cmd == "next":
         ids = sorted(os.listdir(QUEUE)) if os.path.isdir(QUEUE) else []

@@ -54,7 +54,7 @@ if [ -n "$CUSTOM" ]; then
   BVOL="clientslab-blocks-custom"; blocks_volume "$BLOCKS" "$BVOL" fresh
 else
   SHA=$(jq -r .blocks_sha256 "$(dirname "$BLOCKS")/meta.json")
-  BVOL="clientslab-blocks-$SCEN-${SHA:0:12}"; blocks_volume "$BLOCKS" "$BVOL"
+  BVOL="clientslab-blocks-${SCEN//@/-at-}-${SHA:0:12}"; blocks_volume "$BLOCKS" "$BVOL"
 fi
 docker rm -f clientslab-replay >/dev/null 2>&1 || true
 db_setup "$CLIENT" "$DB" "clientslab-run-$CLIENT" /data

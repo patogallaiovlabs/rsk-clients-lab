@@ -69,3 +69,12 @@ This plan brings rustock onto that seed.
   experimental in the fork and can be a later arm of its own.
 - **Two kinds of runs.** Deterministic replay (this plan) and live mining under k6 on the same
   seed, for both clients; the live design is in `docs/live-mining-plan.md`.
+
+## Decision (2026-10-27, evening): compaction on this Mac, in sequence
+
+The converted seed's trie compaction rewrites the whole trie (about 125 GB) before deleting
+any input, which this Mac cannot hold beside both seeds. Decided: mine the samples and run the
+RSKj replay cycles here first, then delete this Mac's copy of the RSKj seed (the boxes keep
+theirs; perf-lab is paused), compact rustock's seed and rebuild its index, run the rustock
+cycles, and copy the compacted seed (about 160 GB) to the boxes. The Docker comparison on the
+mainnet DB is therefore sequential too, and the report says so.

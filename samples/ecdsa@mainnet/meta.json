@@ -1,0 +1,16 @@
+{
+  "name": "ecdsa@mainnet",
+  "db": "mainnet",
+  "blocks": 202,
+  "first_block": 9003580,
+  "last_block": 9003781,
+  "blocks_sha256": "1748b14b7cd57a989a9a9c12830e80a054ed15b2c3cbb1ec74859244936331fd",
+  "seed_tip": 9003579,
+  "seed_tip_hash": "0x471f0ffc09e3d0d80c78e5a83a1e194cae9213c7a43ee583fb8894f85063501b",
+  "k6_option": 7,
+  "threshold": 0.9,
+  "qualifying_at_build": 200,
+  "mined_with": "e507f45031cf0e8a71bf571fcdbfbe9aa529a21b",
+  "built": "2026-10-27T21:40:47Z",
+  "node": "single miner on a clone of the mainnet seed, 4 CPUs, 4 GB heap, 10 GB memory, node.props, maxOpenFiles 1000, timed mining 10 s median"
+}
