@@ -1,60 +1,72 @@
 {
  "where": "boton",
  "scenario": "ecdsa",
- "cycles": 2,
- "verdict": "extend",
- "why": "rustock faster in 2/2 cycles, median -59.78%, sign-test p=0.5",
+ "cycles": 6,
+ "verdict": "rustock faster",
+ "why": "rustock faster in 6/6 cycles, median -59.76%, sign-test p=0.03125",
  "totalMs": {
   "tmean": {
-   "median_pct": -59.78,
-   "rustock_faster": 2,
-   "n": 2,
-   "p": 0.5,
+   "median_pct": -59.76,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
    "deltas_pct": [
     -59.83,
-    -59.74
+    -59.74,
+    -59.93,
+    -59.78,
+    -59.65,
+    -59.73
    ]
   },
   "mean": {
-   "median_pct": -60.47,
-   "rustock_faster": 2,
-   "n": 2,
-   "p": 0.5,
+   "median_pct": -60.46,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
    "deltas_pct": [
     -60.5,
-    -60.44
+    -60.44,
+    -60.64,
+    -60.48,
+    -60.3,
+    -60.42
    ]
   },
   "median": {
-   "median_pct": -59.32,
-   "rustock_faster": 2,
-   "n": 2,
-   "p": 0.5,
+   "median_pct": -59.28,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
    "deltas_pct": [
     -59.35,
-    -59.29
+    -59.29,
+    -59.38,
+    -59.25,
+    -59.17,
+    -59.28
    ]
   }
  },
  "phases": {
   "executeMs": {
-   "median_pct": -59.41,
-   "rustock_faster": 2,
-   "n": 2,
-   "p": 0.5
+   "median_pct": -59.39,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
   },
   "initialValidationMs": {
-   "median_pct": -96.78,
-   "rustock_faster": 2,
-   "n": 2,
-   "p": 0.5
+   "median_pct": -96.76,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
   }
  },
  "absolute_ms": {
   "rskj": {
-   "executeMs": 438.535,
-   "initialValidationMs": 1.81,
-   "onBestBlockMs": 0.0,
+   "executeMs": 438.335,
+   "initialValidationMs": 1.788,
+   "onBestBlockMs": 0.001,
    "onBlockMs": 0.0,
    "postExecuteValidationMs": 0.0,
    "preambleMs": 0.0,
@@ -62,19 +74,19 @@
    "saveReceiptsMs": 0.0,
    "statePersistMs": 0.0,
    "stateRootRegisterMs": 0.0,
-   "switchChainMs": 0.018,
-   "totalMs": 443.33,
-   "txExecutionMs": 438.267
+   "switchChainMs": 0.008,
+   "totalMs": 443.132,
+   "txExecutionMs": 438.069
   },
   "rustock": {
-   "executeMs": 178.515,
+   "executeMs": 178.492,
    "initialValidationMs": 0.058,
    "onBestBlockMs": 0.0,
    "postExecuteValidationMs": 0.001,
    "preambleMs": 0.0,
    "saveReceiptsMs": 0.173,
-   "switchChainMs": 0.076,
-   "totalMs": 178.83
+   "switchChainMs": 0.075,
+   "totalMs": 178.805
   }
  }
 }

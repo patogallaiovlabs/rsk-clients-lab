@@ -69,7 +69,9 @@ run_on() {
   mkdir -p "$out"
   box_quiesce "$box" || { echo "box $box still runs a node, load or replay" >&2; return 1; }
   local t0; t0=$(date +%s)
-  box_ssh "$box" "set -e; cd $R/run; find . -mindepth 1 -delete; mkdir -p logs; exec $cmd" > "$out/raw.log" 2>&1 || true
+  # sudo for the clean-up: a profiling run as root (perf record) leaves root-owned files
+  # there, and an unprivileged delete then fails and the run never starts (2026-10-27).
+  box_ssh "$box" "set -e; cd $R/run; sudo find . -mindepth 1 -delete; mkdir -p logs; exec $cmd" > "$out/raw.log" 2>&1 || true
   echo $(( $(date +%s) - t0 )) > "$out/wall_s"
   rsync -a -e "ssh ${BOX_SSH[*]}" --include='block-breakdown*.log*' --exclude='*' \
     "ubuntu@$(box_host "$box"):$R/run/logs/" "$out/" || true

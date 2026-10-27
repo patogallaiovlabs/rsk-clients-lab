@@ -3,3 +3,10 @@
 
 [2026-10-27T13:32:55Z] rskj e507f4503, rustock 024e2032a
 [2026-10-27T13:36:18Z] rskj e507f4503, rustock 024e2032a
+[2026-10-27T17:15:46Z] rskj e507f4503, rustock 024e2032a
+[2026-10-27T17:17:27Z] failed: /Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/bin/boton-campaign.sh 2026-10-27-c1 ecdsa failed (3):
+rsync: [sender] change_dir "/home/ubuntu/clientslab/run/logs" failed: No such file or directory (2)
+rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1983) [Receiver=3.5.1]
+rsync: [Receiver] write error: Broken pipe (32)
+
+[2026-10-27T17:18:09Z] rskj e507f4503, rustock 024e2032a

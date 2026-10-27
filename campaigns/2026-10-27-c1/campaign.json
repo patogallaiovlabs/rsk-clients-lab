@@ -17,14 +17,18 @@
   "rskj": "perf-lab/integration",
   "rustock": "clients-lab/harness"
  },
- "note": "First Boton campaign: same builds as 2026-10-26-c1, native on boxes A and B, counterbalanced. ecdsa, two complete cycles.",
+ "note": "First Boton campaign: same builds as 2026-10-26-c1, native on boxes A and B, counterbalanced. Stopped after two ecdsa cycles on 2026-10-27, resumed the same day (cycles 1 and 2 kept).",
  "results": {
   "boton/ecdsa": {
-   "verdict": "extend",
-   "why": "rustock faster in 2/2 cycles, median -59.78%, sign-test p=0.5"
+   "verdict": "rustock faster",
+   "why": "rustock faster in 6/6 cycles, median -59.76%, sign-test p=0.03125"
+  },
+  "boton/mainnet-sim": {
+   "verdict": "rustock slower",
+   "why": "rustock faster in 0/6 cycles, median +50.58%, sign-test p=0.03125"
   }
  },
- "started_at": "2026-10-27T13:36:14Z",
+ "started_at": "2026-10-27T17:18:04Z",
  "shas": {
   "rskj": "e507f45031cf0e8a71bf571fcdbfbe9aa529a21b",
   "rustock": "024e2032a6e1cd270fa0cfb27dc14873216adbc4"
@@ -104,7 +108,7 @@
   "rustock": {
    "_doc": "rustock in the harness. Built from the harness adapter branch until its upstream pull requests merge. import_args: rskj's regtest chain as the lab's rsk.conf sets it (genesis file, rskip97=0, rskj's gas-limit bounds, skipPowValidation), the trie in its own RocksDB (a fresh data dir with the default single backend is refused by the fork), flush every {flush} blocks like RSKj.",
    "repo": "clients/rustock",
-   "ref": "clients-lab/harness",
+   "ref": "clients-lab/comparison",
    "upstream_ref": "main",
    "artifact": "binary",
    "import_args": [
@@ -136,5 +140,5 @@
    ]
   }
  },
- "finished_at": "2026-10-27T13:47:57Z"
+ "finished_at": "2026-10-27T18:05:40Z"
 }
