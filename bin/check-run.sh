@@ -6,12 +6,15 @@
 # Reads <out-dir>/block-breakdown.log (and rotated parts), writes hashes.txt, consensus.json
 # and summary.json, and exits non-zero unless the run counts: every block of the scenario
 # connected as best, in order, with exactly the reference hashes (RSKj's own replay).
+# CLIENTSLAB_HASHES, CLIENTSLAB_FIRST and CLIENTSLAB_LAST replace the scenario's reference
+# hashes and block range (replay-docker.sh --blocks: the cross replay of a live arm).
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 CLIENT="$1"; SCEN="$2"; OUT="$3"; WALL="$4"; ART="$5"
 S=".scenarios.\"$SCEN\""
-REF="$LAB/$(cfg "$S.reference_hashes")"; THRESH=$(cfg "$S.threshold"); GAS=$(cfg .chain.gas_limit)
-EXPECTED=$(( $(cfg "$S.last_block") - $(cfg "$S.first_block") + 1 ))
+REF="${CLIENTSLAB_HASHES:-$LAB/$(cfg "$S.reference_hashes")}"; THRESH=$(cfg "$S.threshold"); GAS=$(cfg .chain.gas_limit)
+FIRST="${CLIENTSLAB_FIRST:-$(cfg "$S.first_block")}"; LAST="${CLIENTSLAB_LAST:-$(cfg "$S.last_block")}"
+EXPECTED=$(( LAST - FIRST + 1 ))
 
 # --- consensus check -------------------------------------------------------------------
 # The breakdown line carries block=<n> hash=<h> for every block each client connected as best.

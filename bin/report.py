@@ -7,7 +7,7 @@ The facts only: what ran, the verdict per machine and scenario, the per-cycle nu
 the per-phase means. agent-analyst and agent-writer add the explanation afterwards, in
 campaigns/<id>/analysis.md, which this report links to when present.
 """
-import json, os, sys
+import glob, json, os, sys
 
 LAB = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 CAMPAIGNS = os.path.join(LAB, "campaigns")
@@ -27,11 +27,33 @@ def ratio(delta_pct, short=False):
     return f"rustock {1 / r:.2f}x faster than RSKj" if r < 1 else f"rustock {r:.2f}x slower than RSKj"
 
 
+def arm_table(raw):
+    """Per live arm: what it mined, what k6 saw, whether the cross replay passed."""
+    rows = []
+    for p in sorted(glob.glob(os.path.join(raw, "c*-*", "consensus.json")),
+                    key=lambda x: (int(os.path.basename(os.path.dirname(x))[1:].split("-")[0]), x)):
+        k = json.load(open(p))
+        name = os.path.basename(os.path.dirname(p))
+        cycle, client = name[1:].split("-", 1)
+        cross = k.get("cross_replay")
+        cross_s = "ok" if k.get("checks", {}).get("cross_replay") else \
+            ("not run" if cross == "not run" else f"FAILED at {cross.get('first_difference') or '?'}" if isinstance(cross, dict) else "n/a")
+        pct = k.get("k6_success_pct")
+        rows.append(f"| {cycle} | {client} | {k.get('expected', 'n/a')} | {k.get('qualifying_blocks', 'n/a')} | "
+                    f"{k.get('tx_count', 'n/a')} | {(k.get('gas_used') or 0):,} | "
+                    f"{pct if pct is None else f'{pct:.2f}%'} | {cross_s} | {'yes' if k.get('consensus_ok') else 'no'} |")
+    if not rows:
+        return []
+    return ["| cycle | client | blocks mined | qualifying | txs | gas used | k6 success | cross replay | counts |",
+            "|---|---|---|---|---|---|---|---|---|"] + rows + [""]
+
+
 def main(cid):
     d = os.path.join(CAMPAIGNS, cid)
     c = json.load(open(os.path.join(d, "campaign.json")))
     shas = c.get("shas", {})
-    L = [f"# Campaign {cid}: RSKj vs rustock", ""]
+    live = c.get("kind", "replay") == "live"
+    L = [f"# Campaign {cid}: RSKj vs rustock" + (", live mining" if live else ""), ""]
     if c.get("note"):
         L += [c["note"], ""]
     L += [f"Status **{c['status']}**, queued {c.get('queued_at')}, finished {c.get('finished_at', 'n/a')}.", "",
@@ -42,14 +64,30 @@ def main(cid):
         L += ["## Stopped", "", "```", c["error"][-3000:], "```", ""]
     cfg = c.get("settings", {}).get("config", {})
     dk = cfg.get("docker", {})
-    L += ["Each run replays the scenario's blocks into one client from an empty database and counts "
-          "only if every block hash matches RSKj's reference replay. Per run: the 10% trimmed mean of "
-          "per-block `totalMs` over the blocks at least 90% full. Per cycle: rustock vs RSKj in percent "
-          "(negative means rustock is faster). Across cycles: the exact sign test. "
-          "`docs/timing-scope.md` says what `totalMs` and each phase cover in each client.", "",
-          f"Docker: both containers limited to {dk.get('cpus')} CPUs and {dk.get('memory')} memory; "
-          f"RSKj with `{dk.get('jvm_heap')}`. Boton: fwd slot runs RSKj on box A and rustock on box B, "
-          "rev swaps them, and the cycle's figure is the mean of the two boxes.", ""]
+    lv = cfg.get("live", {})
+    if live:
+        L += [f"Each arm has one client mine its own blocks under the scenario's k6 load for {lv.get('arm_minutes')} "
+              "minutes (`bin/live-arm.sh`). An arm counts only if its blocks replayed into the other client with "
+              "the same hashes (the cross replay), its log holds exactly its own blocks, the k6 success rate held "
+              f"and at least {lv.get('min_qualifying_blocks')} blocks were at least 90% full after the first "
+              f"{lv.get('min_block')} (`bin/check-live-arm.sh`). The two arms of a cycle mine different blocks: "
+              "the paired design absorbs that, the per-arm table below shows how alike the load was. "
+              "Per arm: the 10% trimmed mean of per-block `totalMs` over the qualifying blocks. Per cycle: "
+              "rustock vs RSKj in percent (negative means rustock is faster). Across cycles: the exact sign "
+              "test. `docs/timing-scope.md` says what `totalMs` covers in each client; on the mined path "
+              "rustock's line comes from the adapter (`docs/live-mining-plan.md`, section 3).", "",
+              f"Docker: both containers limited to {lv.get('cpus')} CPUs and {lv.get('memory')} memory "
+              f"({lv.get('mainnet_memory')} on the mainnet seed); RSKj with `{dk.get('jvm_heap')}`, timed mining "
+              "at a 10 s median in both; k6 on the host.", ""]
+    else:
+        L += ["Each run replays the scenario's blocks into one client from an empty database and counts "
+              "only if every block hash matches RSKj's reference replay. Per run: the 10% trimmed mean of "
+              "per-block `totalMs` over the blocks at least 90% full. Per cycle: rustock vs RSKj in percent "
+              "(negative means rustock is faster). Across cycles: the exact sign test. "
+              "`docs/timing-scope.md` says what `totalMs` and each phase cover in each client.", "",
+              f"Docker: both containers limited to {dk.get('cpus')} CPUs and {dk.get('memory')} memory; "
+              f"RSKj with `{dk.get('jvm_heap')}`. Boton: fwd slot runs RSKj on box A and rustock on box B, "
+              "rev swaps them, and the cycle's figure is the mean of the two boxes.", ""]
     rows = []
     for where in c["where"]:
         for scen in c["scenarios"]:
@@ -72,6 +110,8 @@ def main(cid):
                 continue
             v = json.load(open(p))
             L += [f"## {scen}, {where}", "", f"**{v['verdict']}**: {v['why']}.", ""]
+            if live:
+                L += arm_table(os.path.join(d, "raw", where, scen))
             t = v.get("totalMs", {})
             if t:
                 L += ["| statistic | rustock vs RSKj | rustock faster | p | per cycle |", "|---|---|---|---|---|"]

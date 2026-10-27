@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """rsk-clients-lab driver: queue a campaign, run it, read its status.
 
-    lab.py queue [--where docker,boton] [--scenarios mainnet-sim,ecdsa] [--cycles 6]
-                 [--rskj REF] [--rustock REF] [--note TEXT]     -> prints the campaign id
+    lab.py queue [--kind replay|live] [--where docker,boton] [--scenarios mainnet-sim,ecdsa]
+                 [--cycles 6] [--rskj REF] [--rustock REF] [--note TEXT]   -> prints the campaign id
     lab.py run <id>          run one campaign in the foreground (start.sh runs it detached)
     lab.py next              run the oldest queued campaign, if any
     lab.py status [<id>]     one line per campaign, or one campaign's progress
@@ -12,6 +12,11 @@ the same two builds. Per scenario and machine it runs cycles until the verdict i
 max_cycles is reached (bin/stats.py). Every run is checked against the reference hashes; a
 run that fails the check stops the campaign as a consensus finding, since timing a client
 that computed something else means nothing.
+
+A live campaign (--kind live, Docker only for now) replaces the replay with bin/live-arm.sh:
+each client mines its own blocks under k6 load for live.arm_minutes, the cycle then replays
+each arm's blocks into the other client (the cross replay) and bin/check-live-arm.sh decides
+whether the arm counts. The cycle loop, the lock handling and the verdict are the same.
 """
 import argparse, datetime as dt, glob, json, os, subprocess, sys, time
 
@@ -63,7 +68,7 @@ def queue(a):
     d = os.path.join(CAMPAIGNS, cid)
     os.makedirs(d)
     c = {"id": cid, "dir": d, "status": "queued", "queued_at": now(), "queued_epoch": int(time.time()),
-         "where": a.where.split(","), "scenarios": a.scenarios.split(","),
+         "kind": a.kind, "where": a.where.split(","), "scenarios": a.scenarios.split(","),
          "cycles": a.cycles or CFG["campaign"]["cycles"], "max_cycles": CFG["campaign"]["max_cycles"],
          "refs": {"rskj": a.rskj or json.load(open(os.path.join(LAB, "clients/rskj.json")))["ref"],
                   "rustock": a.rustock or json.load(open(os.path.join(LAB, "clients/rustock.json")))["ref"]},
@@ -71,6 +76,10 @@ def queue(a):
     for s in c["scenarios"]:
         if s not in CFG["scenarios"]:
             sys.exit(f"unknown scenario {s}")
+        if a.kind == "live" and CFG["scenarios"][s].get("k6_option") is None:
+            sys.exit(f"scenario {s} has no k6_option; a live campaign needs one")
+    if a.kind == "live" and c["where"] != ["docker"]:
+        sys.exit("live campaigns run in Docker on this Mac only; the Boton live slot is a later step")
     save(c)
     open(os.path.join(QUEUE, cid), "w").close()
     print(cid)
@@ -112,7 +121,46 @@ def docker_run(c, client, scen, out):
     log(f"docker {scen} {os.path.basename(out)}: {cons.get('records')} blocks in {cons.get('wall_s')} s", c)
 
 
+def live_arm(c, client, scen, out):
+    art = c["builds"]["rskj"] if client == "rskj" else c["builds"]["rustock-docker"]
+    # The arm's own log goes beside its directory (live-arm.sh empties the directory first).
+    with open(out + ".log", "w") as f:
+        r = subprocess.run([os.path.join(BIN, "live-arm.sh"), client, art, scen, out], stdout=f, stderr=subprocess.STDOUT,
+                           env=dict(os.environ, CLIENTSLAB_DOCKER_LOCK_HELD="1"))
+    if r.returncode != 0:
+        tail = open(out + ".log", errors="replace").read()[-2000:]
+        raise RuntimeError(f"live arm {client} {scen} {os.path.basename(out)} failed:\n{tail}")
+    arm = json.load(open(os.path.join(out, "arm.json")))
+    log(f"live {scen} {os.path.basename(out)}: blocks {arm['start_height'] + 1}..{arm['end_height']} in {arm['wall_s']} s", c)
+
+
+def cross_replay(c, client, scen, out):
+    """The arm's blocks into the OTHER client, from the same starting database."""
+    other = "rustock" if client == "rskj" else "rskj"
+    art = c["builds"]["rskj"] if other == "rskj" else c["builds"]["rustock-docker"]
+    arm = json.load(open(os.path.join(out, "arm.json")))
+    if arm["blocks_exported"] < 1:
+        return  # nothing to replay; check-live-arm.sh discards the arm
+    sh([os.path.join(BIN, "replay-docker.sh"), other, art, scen, os.path.join(out, "cross"),
+        "--blocks", os.path.join(out, "blocks.txt.gz"), "--hashes", os.path.join(out, "hashes.txt"),
+        "--first", str(arm["start_height"] + 1), "--last", str(arm["end_height"])],
+       env={"CLIENTSLAB_DOCKER_LOCK_HELD": "1"}, check=False)
+
+
+def check_live(c, client, scen, out):
+    r = sh([os.path.join(BIN, "check-live-arm.sh"), client, scen, out], check=False)
+    p = os.path.join(out, "consensus.json")
+    cons = json.load(open(p)) if os.path.exists(p) else {}
+    if r.returncode == 3:
+        raise ConsensusFailure(f"{client} {scen} {os.path.basename(out)} cross replay: {cons.get('cross_replay')}")
+    if r.returncode != 0:
+        raise ArmDiscarded(f"{client} {scen} {os.path.basename(out)}: {cons or r.stderr[-1500:]}")
+    log(f"live {scen} {os.path.basename(out)}: {cons.get('expected')} blocks mined, {cons.get('qualifying_blocks')} qualifying, "
+        f"k6 {cons.get('k6_success_pct')}%, cross replay ok", c)
+
+
 def run_docker(c, scen):
+    """The Docker cycles of one scenario, replay or live (campaign.json kind)."""
     d = os.path.join(c["dir"], "raw", "docker", scen)
     os.makedirs(d, exist_ok=True)
     k = 0
@@ -132,6 +180,9 @@ def run_docker(c, scen):
         r = subprocess.run(["bash", "-c", cmd], env=dict(os.environ, **env))
         if r.returncode == 3:
             raise ConsensusFailure(open(os.path.join(d, "consensus-failure.txt")).read())
+        if r.returncode == 4:
+            raise RuntimeError("live arm discarded, rerun the campaign to repeat the cycle: "
+                               + open(os.path.join(d, "arm-discarded.txt")).read())
         if r.returncode != 0:
             raise RuntimeError(f"docker cycle {k} of {scen} failed (exit {r.returncode})")
         if k >= c["cycles"]:
@@ -144,16 +195,36 @@ def run_docker(c, scen):
     return v
 
 
+run_live = run_docker  # the same loop; the cycle below is what differs
+
+
+class ArmDiscarded(Exception):
+    pass
+
+
 def cycle(cid, scen, k, order):
-    """One Docker cycle, called under the lock by run_docker."""
+    """One Docker cycle, called under the lock by run_docker. A replay cycle is one run per
+    client; a live cycle is one arm per client, then each arm's cross replay into the other
+    client, then the checks (an arm that measured nothing is discarded, exit 4)."""
     c = load(cid)
     d = os.path.join(c["dir"], "raw", "docker", scen)
     try:
-        for client in order:
-            docker_run(c, client, scen, os.path.join(d, f"c{k}-{client}"))
+        if c.get("kind", "replay") == "live":
+            for client in order:
+                live_arm(c, client, scen, os.path.join(d, f"c{k}-{client}"))
+            for client in order:
+                cross_replay(c, client, scen, os.path.join(d, f"c{k}-{client}"))
+            for client in order:
+                check_live(c, client, scen, os.path.join(d, f"c{k}-{client}"))
+        else:
+            for client in order:
+                docker_run(c, client, scen, os.path.join(d, f"c{k}-{client}"))
     except ConsensusFailure as e:
         open(os.path.join(d, "consensus-failure.txt"), "w").write(str(e))
         sys.exit(3)
+    except ArmDiscarded as e:
+        open(os.path.join(d, "arm-discarded.txt"), "w").write(str(e))
+        sys.exit(4)
 
 
 def run(cid):
@@ -169,7 +240,7 @@ def run(cid):
         for where in c["where"]:
             for scen in c["scenarios"]:
                 if where == "docker":
-                    v = run_docker(c, scen)
+                    v = (run_live if c.get("kind", "replay") == "live" else run_docker)(c, scen)
                 else:
                     v = sh([os.path.join(BIN, "boton-campaign.sh"), cid, scen], check=True) and \
                         stats.judge("boton", os.path.join(c["dir"], "raw", "boton", scen), scen)
@@ -193,18 +264,19 @@ def run(cid):
 def status(cid=None):
     if cid:
         c = load(cid)
-        print(json.dumps({k: c.get(k) for k in ("id", "status", "where", "scenarios", "shas", "results", "error")}, indent=1))
+        print(json.dumps({k: c.get(k) for k in ("id", "status", "kind", "where", "scenarios", "shas", "results", "error")}, indent=1))
         return
     for p in sorted(glob.glob(os.path.join(CAMPAIGNS, "*", "campaign.json"))):
         c = json.load(open(p))
         res = "; ".join(f"{k}: {v['verdict']}" for k, v in c.get("results", {}).items())
-        print(f"{c['id']:16s} {c['status']:18s} {','.join(c['where']):13s} {','.join(c['scenarios']):18s} {res}")
+        print(f"{c['id']:16s} {c['status']:18s} {c.get('kind', 'replay'):7s} {','.join(c['where']):13s} {','.join(c['scenarios']):18s} {res}")
 
 
 def main():
     ap = argparse.ArgumentParser()
     sp = ap.add_subparsers(dest="cmd", required=True)
     q = sp.add_parser("queue")
+    q.add_argument("--kind", choices=("replay", "live"), default="replay")
     q.add_argument("--where", default="docker")
     q.add_argument("--scenarios", default="mainnet-sim,ecdsa")
     q.add_argument("--cycles", type=int)

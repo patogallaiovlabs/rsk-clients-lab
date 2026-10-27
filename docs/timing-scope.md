@@ -52,6 +52,23 @@ which reads `Instant::now` only when `--breakdown-log` is given.
 totalMs (320) covers the whole call, the flush included. Outside it: reading and decoding the
 line (`parse_export_line`, `main.rs` 3382) and the final flush in `BlockImporter::finish`.
 
+**Mined blocks.** `crates/execution/src/mining/server.rs`, `MinerServer::complete_and_import`,
+writes the same line for a block the node mines and connects (`--mine`, with
+`--breakdown-log`). The clock starts when the solution is matched to its template and the
+line is written after the commit. preambleMs: the template looked up by its merged-mining
+hash and the executed-head check. initialValidationMs: `MergedMiningRule::validate` (proof of
+work skipped by `--skip-pow-validation`) plus `process_block`'s first stage, transactions root
+and ommers hash. executeMs and postExecuteValidationMs: as on the import path, the same
+`process_block_timed`. saveReceiptsMs: `commit_receipts`, which runs before the
+block is stored on this path (the import stores first), so the two phases swap order; the
+line names them, so the analyzer does not care. switchChainMs: header, body and total
+difficulty written, then the canonical index and the executed head. onBestBlockMs: the
+committed hook (the pool told what was mined, `remove_mined` and `evict_outdated`) and the
+trie flush every `--flush-every` blocks (default 10), zero otherwise. totalMs covers all of
+them, rskj's `internalTryToConnect` scope for a mined block (`addNewMinedBlock` is
+`tryToConnect`). Outside it on both sides: the template build, which executes the block
+once more before the connect, the nonce handling and the RPC.
+
 ## Differences that remain
 
 - rustock has nothing like `stateRootRegisterMs`, `processBestMs` or `onBlockMs`: there is no
@@ -65,3 +82,5 @@ line (`parse_export_line`, `main.rs` 3382) and the final flush in `BlockImporter
   go to its block database as they are stored, inside switchChainMs and saveReceiptsMs.
 - RSKj rounds every phase down to a whole millisecond; sums of RSKj phases fall short of its
   totalMs by up to one millisecond per phase.
+
+`trieSaveMs` (both rustock lines): the part of `executeMs` spent writing dirty trie nodes to the trie store, a comparison-only probe on `clients-lab/comparison`; RSKj has no such phase.

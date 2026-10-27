@@ -1,6 +1,9 @@
 {
   "_doc": "rsk-clients-lab settings. Read by bin/*.py and bin/*.sh. README.md explains the method.",
-  "clients": ["rskj", "rustock"],
+  "clients": [
+    "rskj",
+    "rustock"
+  ],
   "scenarios": {
     "mainnet-sim": {
       "description": "k6 option 14 (mainnet-sim): storage writes, ERC-20, native transfers and calldata-heavy rollup txs, about 164 txs per block",
@@ -9,7 +12,8 @@
       "first_block": 1,
       "last_block": 1159,
       "threshold": 0.9,
-      "min_difference_pct": 2.0
+      "min_difference_pct": 2.0,
+      "k6_option": 14
     },
     "ecdsa": {
       "description": "k6 option 7 (CPU ECDSA): signature-recovery-heavy contract calls, almost all of each block is transaction execution",
@@ -18,7 +22,32 @@
       "first_block": 1,
       "last_block": 207,
       "threshold": 0.9,
-      "min_difference_pct": 1.0
+      "min_difference_pct": 1.0,
+      "k6_option": 7
+    },
+    "mainnet-sim@mainnet": {
+      "description": "k6 option 14 (mainnet-sim): storage writes, ERC-20, native transfers and calldata-heavy rollup txs, about 164 txs per block, mined on the mainnet seed",
+      "db": "mainnet",
+      "k6_option": 14,
+      "blocks": "samples/mainnet-sim@mainnet/blocks.txt.gz",
+      "reference_hashes": "samples/mainnet-sim@mainnet/reference_hashes.txt",
+      "first_block": null,
+      "last_block": null,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0,
+      "_doc": "first_block/last_block are filled from samples/<name>/meta.json once bin/build-mainnet-sample.sh has run"
+    },
+    "ecdsa@mainnet": {
+      "description": "k6 option 7 (CPU ECDSA): signature-recovery-heavy contract calls, almost all of each block is transaction execution, mined on the mainnet seed",
+      "db": "mainnet",
+      "k6_option": 7,
+      "blocks": "samples/ecdsa@mainnet/blocks.txt.gz",
+      "reference_hashes": "samples/ecdsa@mainnet/reference_hashes.txt",
+      "first_block": null,
+      "last_block": null,
+      "threshold": 0.9,
+      "min_difference_pct": 1.0,
+      "_doc": "first_block/last_block are filled from samples/<name>/meta.json once bin/build-mainnet-sample.sh has run"
     }
   },
   "chain": {
@@ -38,10 +67,14 @@
     "memory": "6g",
     "jvm_heap": "-Xms2G -Xmx4G",
     "rskj_image": "eclipse-temurin:17-jre@sha256:38e0afc86a10bf4cadbf1586fb617b3a9a4d09c9a0be882e29ada4ed0895fc84",
-    "rustock_image": "clientslab-rustock"
+    "rustock_image": "clientslab-rustock",
+    "mainnet_memory": "10g"
   },
   "boton": {
-    "boxes": ["A", "B"],
+    "boxes": [
+      "A",
+      "B"
+    ],
     "box_priority": 2,
     "remote_dir": "clientslab"
   },
@@ -49,5 +82,32 @@
     "_doc": "Locks shared with rsk-perf-lab in ~/.research-lab/locks (bin/lib.sh). A campaign holds this Mac's Docker slot as a long holder, so perf-lab's short replays and gates go first.",
     "long_lock_max_wait_min": 30,
     "min_free_gb": 20
+  },
+  "mainnet_seed": {
+    "_doc": "perf-lab's mainnet seed (rsk-database-seed): the one thing read from another checkout, because the 186 GiB seed exists once. volume holds /seed (RSKj) and /rustock-seed; runs use hard-link clones in it. k6 is the rskj-k6-tests checkout live arms drive the node with (bin/live-arm.sh).",
+    "perf_lab": "../rsk-perf-lab",
+    "volume": "perflab-mainnet",
+    "runtime_image": "perflab-runtime:2",
+    "rustock_seed": "rustock-seed",
+    "k6": "../rsk-perf-lab/repos/rskj-k6-tests"
+  },
+  "live": {
+    "_doc": "Live mining arms (bin/live-arm.sh, docs/live-mining-plan.md): each client mines its own blocks under k6 for arm_minutes, in a container with these limits (perf-lab's live arms: 2 CPUs, 10 GB on the mainnet seed). The first min_block blocks of every arm are dropped (k6 deploys its contracts there); an arm counts only with min_qualifying_blocks blocks at least threshold full, a k6 success rate (k6_success_metric per k6 option, from the k6 summary) of at least k6_min_success_pct, and its blocks replayed into the other client with the same hashes. mining_coinbase is where rustock sends block rewards (RSKj derives its own from miner.coinbase.secret); REMASC pays either out 4000 blocks later, so neither arm sees the reward.",
+    "arm_minutes": 30,
+    "cpus": 2,
+    "memory": "6g",
+    "mainnet_memory": "10g",
+    "min_block": 20,
+    "min_qualifying_blocks": 20,
+    "k6_success_metric": {
+      "14": "tx_success_rate",
+      "7": "stress_call_success_rate"
+    },
+    "k6_min_success_pct": {
+      "14": 98,
+      "7": 80
+    },
+    "rpc_port": 4444,
+    "mining_coinbase": "0x1111111111111111111111111111111111111111"
   }
 }

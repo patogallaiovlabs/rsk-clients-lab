@@ -12,6 +12,12 @@ bin/lab.py status [<id>]
 
 - Defaults: RSKj at `perf-lab/integration`, rustock at `clients-lab/comparison`, 6 cycles (up to
   12 while undecided). Override with `--rskj`, `--rustock`, `--cycles`, and say why in `--note`.
+- `--kind live`: live mining instead of replay (README "Live mining"). Docker only; each cycle is
+  one 30-minute arm per client plus the cross replays, so count on 80 minutes per cycle on the
+  small chain and more on the mainnet seed (`--scenarios mainnet-sim@mainnet,ecdsa@mainnet`).
+  Needs the rustock adapter's live flags (`clients/rustock.json` `live_args`) and the k6 suite at
+  `config.json` `mainnet_seed.k6`. A `status: failed` saying "live arm discarded" is an arm that
+  measured nothing (few full blocks, k6 rejected); rerun `bin/lab.py run <id>` to repeat the cycle.
 - A campaign waits for the shared machines (`.claude/rules/shared-machines.md`); a long wait
   behind perf-lab is normal. `ls ~/.research-lab/locks/*` shows holders and waiters.
 - When it finishes: `campaigns/<id>/report.md` (facts). Then agent-analyst writes

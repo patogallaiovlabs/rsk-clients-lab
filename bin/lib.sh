@@ -118,3 +118,75 @@ wait_for_disk() {
     sleep 300; trim_vm_disk
   done
 }
+
+# --- Docker runs: the pieces replay-docker.sh and live-arm.sh share ------------------------
+# The rustock arguments of one clients/rustock.json key, with the placeholders filled in by
+# a sed script, into the global array ARGS (bash 3.2: no way to return an array).
+#   rustock_args <key> 's#{datadir}#/data/db#; s#{flush}#10#; ...'
+rustock_args() {
+  ARGS=()
+  local a
+  while IFS= read -r a; do ARGS+=("$a"); done < <(jq -r ".$1[]" "$LAB/clients/rustock.json" | sed -e "$2")
+}
+
+# A gzipped block file in its own volume, mounted read-only by the containers that read it:
+# bind-mounting large host files into Docker Desktop leaks their space. Filled once per
+# name; pass a third argument to refill it (a live arm's export is new every time).
+#   blocks_volume <blocks.txt.gz> <volume> [fresh]
+blocks_volume() {
+  [ -n "${3:-}" ] && docker volume rm -f "$2" >/dev/null 2>&1
+  if ! docker run --rm -v "$2":/b alpine test -e /b/complete 2>/dev/null; then
+    gunzip -c "$1" | docker run -i --rm -v "$2":/b alpine sh -c 'cat > /b/blocks.txt && touch /b/complete'
+  fi
+}
+
+# The database a container starts from: empty (a fresh volume), or a hard-link clone of
+# the mainnet seed for the client (docs/mainnet-db-plan.md). RSKj's clone comes from
+# perf-lab's clone.sh; rustock's seed is the converted copy in the same volume, cloned the
+# same way: tables linked, the rest copied, since RocksDB never rewrites a table.
+#   db_setup <client> <empty|mainnet> <name> <mount-point>
+# sets DATA (the docker run flags that mount it) and MAINNET_PROPS (RSKj's node.props line
+# for the seed, empty otherwise); db_drop removes what db_setup made.
+db_setup() {
+  local client="$1" db="$2" name="$3" mnt="$4"
+  DB_KIND="$db"; DB_NAME="$name"; MAINNET_PROPS=""
+  if [ "$db" = mainnet ]; then
+    local perf mvol; perf="$LAB/$(cfg .mainnet_seed.perf_lab)"; mvol=$(cfg .mainnet_seed.volume)
+    docker run --rm -v "$mvol":/v alpine rm -rf "/v/$name"
+    if [ "$client" = rskj ]; then
+      ( cd "$perf/database-seed" && SEED=mainnet SIM_ROOT="$perf" PERF_LAB_LIB="$perf/bin/lib.sh" \
+          RUNTIME_IMAGE="$(cfg .mainnet_seed.runtime_image)" ./clone.sh "$name" ) >/dev/null
+      MAINNET_PROPS="-Ddatabase.rocksdb.maxOpenFiles=1000 $(cat "$perf/database-seed/seeds/mainnet/node.props")"
+    else
+      docker run --rm -v "$mvol":/v alpine sh -c "cd /v/$(cfg .mainnet_seed.rustock_seed) && find . -type d -exec mkdir -p /v/$name/{} \; \
+        && find . -type f -name '*.sst' -exec ln {} /v/$name/{} \; && find . -type f ! -name '*.sst' -exec cp -a {} /v/$name/{} \;"
+    fi
+    DATA=(--mount "type=volume,src=$mvol,dst=$mnt,volume-subpath=$name")
+  else
+    docker volume rm -f "$name" >/dev/null 2>&1 || true
+    docker volume create "$name" >/dev/null
+    DATA=(-v "$name:$mnt")
+  fi
+}
+db_drop() {
+  [ -n "${DB_NAME:-}" ] || return 0   # never "rm -rf /v/": an empty name would be the whole seed volume
+  if [ "${DB_KIND:-}" = mainnet ]; then docker run --rm -v "$(cfg .mainnet_seed.volume)":/v alpine rm -rf "/v/$DB_NAME"
+  else docker volume rm -f "$DB_NAME" >/dev/null 2>&1 || true; fi
+  DB_NAME=""
+}
+# The height of the mainnet seed: a run on it starts at seed_tip and mines or imports above it.
+seed_tip() { jq -r .seed_tip "$LAB/$(cfg .mainnet_seed.perf_lab)/database-seed/seeds/mainnet/meta.json"; }
+
+# No k6 load on this host: perf-lab's quiesce_local_load. infinite.sh first, so it does not
+# start another k6 run; k6 gets SIGTERM and prints its summary before it exits.
+quiesce_load() {
+  pkill -f "[i]nfinite.sh" 2>/dev/null || true
+  pkill -f "[k]6 run" 2>/dev/null || true
+  local i
+  for i in $(seq 1 60); do
+    pgrep -f "[k]6 run|[i]nfinite.sh" >/dev/null || return 0
+    sleep 1
+  done
+  log "k6 load still running after 60 s: $(pgrep -fl '[k]6 run|[i]nfinite.sh' | head -3)"
+  return 1
+}

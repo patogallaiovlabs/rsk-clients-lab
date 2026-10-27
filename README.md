@@ -41,8 +41,24 @@ or "no difference", with the minimum difference set per scenario in `config.json
 One node per machine at a time. This Mac's Docker VM and the Boton boxes are shared with
 rsk-perf-lab through the locks in `~/.research-lab/locks` (see `bin/lib.sh`).
 
-Out of scope, because rustock cannot do it yet: live mining under k6 (it has no miner and no
-wallet) and the mainnet database (it cannot read RSKj's).
+## Live mining
+
+A live campaign (`bin/lab.py queue --kind live`) has each client mine its own blocks instead
+of replaying a sample: one 30-minute arm per client per cycle, in Docker on this Mac, the node
+under the scenario's k6 load (option 14 for `mainnet-sim`, 7 for `ecdsa`) from an empty
+database or a clone of the mainnet seed (`mainnet-sim@mainnet`, `ecdsa@mainnet`). RSKj runs
+as rsk-perf-lab's live arms do (timed mining at a 10 s median, 2 CPUs); rustock runs
+`live_args` from `clients/rustock.json`, which need the adapter's timed miner, mined-block
+timing line and block export (`docs/live-mining-plan.md`). The hash gate becomes four checks
+(`bin/check-live-arm.sh`): the arm's blocks replay into the other client with the same hashes
+(the cross replay, through `bin/replay-docker.sh --blocks`), the log holds exactly the arm's
+own blocks, the k6 success rate held, and at least 20 blocks were at least 90% full after the
+first 20. The statistic and the verdict are the ones above; `report.md` adds a per-arm table
+with blocks mined, qualifying blocks, transactions, k6 success rate and the cross-replay
+result, since the two arms of a cycle mine different blocks. Boton live slots are a later step.
+
+Out of scope, because rustock cannot do it yet: the mainnet database (it cannot read RSKj's;
+`docs/mainnet-db-plan.md` converts a copy).
 
 ## The rustock adapter
 
@@ -63,9 +79,9 @@ Every report names the commit. No adapter change may touch what the client compu
 | Path | What |
 |---|---|
 | `clients/rskj`, `clients/rustock` | submodules; `clients/<name>.json` describes how each is built and run |
-| `conf/` | genesis and RSKj node config, the same files rsk-perf-lab uses |
+| `conf/` | genesis and RSKj node config, the same files rsk-perf-lab uses; `rustock-wallet.keys`, the ten regtest keys k6 sends from in live arms |
 | `samples/<scenario>/` | block file (gitignored), reference hashes, `meta.json` with its sha256 |
-| `bin/` | `build-client.sh`, `replay-docker.sh`, `import-sample.sh`, `with-lock.sh`, stats and analyzer |
+| `bin/` | `build-client.sh`, `replay-docker.sh`, `live-arm.sh`, `import-sample.sh`, `with-lock.sh`, stats and analyzer |
 | `docs/` | timing scope, adapter pull request descriptions |
 | `campaigns/<date>-<id>/` | a campaign's report (raw data under `raw/`, not committed) |
 | `state/` | builds, runs, logs (gitignored) |
@@ -76,5 +92,6 @@ Every report names the commit. No adapter change may touch what the client compu
 bin/build-client.sh rskj perf-lab/integration             # -> state/builds/rskj-<sha>.jar
 bin/build-client.sh rustock clients-lab/comparison linux-arm64
 bin/replay-docker.sh rskj state/builds/rskj-<sha>.jar ecdsa state/runs/try-rskj
+bin/live-arm.sh rskj state/builds/rskj-<sha>.jar ecdsa state/runs/live-rskj   # one 30-minute live arm
 bin/with-lock.sh <command>                                # run anything heavy in the shared Docker slot
 ```
