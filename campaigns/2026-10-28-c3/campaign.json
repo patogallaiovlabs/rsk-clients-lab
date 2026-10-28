@@ -1,7 +1,7 @@
 {
  "id": "2026-10-28-c3",
  "dir": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/campaigns/2026-10-28-c3",
- "status": "running",
+ "status": "failed",
  "queued_at": "2026-10-28T11:21:25Z",
  "queued_epoch": 1793186485,
  "kind": "live",
@@ -342,5 +342,7 @@
    "_live_doc": "live_args (bin/live-arm.sh): the replay flags without --import-blocks, serving RPC on 4444 for k6, with the ten cow keys from conf/rustock-wallet.keys ({wallet}, the fork's regtest-wallet.example.keys) so eth_sendTransaction signs for the accounts the genesis funds, the account rate limiter off as in RSKj's rsk.conf, the evm_* namespace for evm_startMining, timed mining at a 10 s median like RSKj's TimedMinerClient (--mine-timed, adapter harness/timed-mining) with nonce 0 under --skip-pow-validation, the trie flushed every {flush} mined blocks and the mined-block breakdown line (adapter harness/mined-block-timing) in {breakdown}. export_args (adapter harness/export-blocks) writes blocks {from}..{to} in RSKj's ExportBlocks format to {file} for the cross replay, on a stopped data dir. The adapter branches are being written: --mine-timed, --flush-every and the --export-* flags may land under other names, and live-arm.sh reads whatever is here. mainnet_* are the same on top of mainnet_import_args.",
    "_mainnet_args_doc": "mainnet_*_args: the same regtest configuration as *_args on the converted mainnet seed, whose trie lives in the single RocksDB backend. The seed runs as regtest (chain id 33, conf/genesis_25M.json, every hardfork at genesis): that is how RSKj mines on it in perf-lab (--regtest plus node.props), so the sample's transactions carry chain id 33. Verified 2026-10-27: 204 blocks of mainnet-sim@mainnet imported with the reference hashes."
   }
- }
+ },
+ "error": "live arm discarded, rerun the campaign to repeat the cycle: rustock ecdsa c1-rustock: {'consensus_ok': False, 'kind': 'live', 'records': 129, 'expected': 123, 'first_difference': '> 124 c83c2a4bd17ba1761dfe5aea345d48161698710107275cb4d155434f8906c1bc', 'wall_s': 1949, 'client': 'rustock', 'artifact': 'clientslab-rustock:cb6d948e2d56-linux-arm64', 'start_height': 0, 'end_height': 123, 'checks': {'cross_replay': True, 'own_blocks': False, 'k6': False, 'qualifying': True}, 'k6_success_pct': 68.02, 'k6_min_success_pct': 80.0, 'k6_metric': 'stress_call_success_rate', 'qualifying_blocks': 70, 'min_qualifying_blocks': 20, 'tx_count': 9004, 'gas_used': 2604360426, 'cross_replay': {'consensus_ok': True, 'records': 123, 'expected': 123, 'first_difference': '', 'wall_s': 22, 'client': 'rskj', 'artifact': '/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar'}}",
+ "finished_at": "2026-10-28T12:25:08Z"
 }
