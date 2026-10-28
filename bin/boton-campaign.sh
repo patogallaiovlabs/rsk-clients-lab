@@ -96,7 +96,7 @@ run_on() {
       sudo rm -rf $DBDIR; sudo cp -al $seed/. $DBDIR/ && sudo find $DBDIR -type f ! -name '*.sst' -exec sh -c 'for f; do cp -a \"\$f\" \"\$f.copy\" && mv -f \"\$f.copy\" \"\$f\"; done' _ {} +
       sudo find $DBDIR \\( -type d -o -type f ! -name '*.sst' \\) -exec chown ubuntu:ubuntu {} +;"
   fi
-  box_ssh "$box" "set -e; cd $R/run; sudo find . -mindepth 1 -delete; mkdir -p logs; $clone exec $cmd" > "$out/raw.log" 2>&1 || true
+  box_ssh "$box" "set -e; ulimit -n 65536; cd $R/run; sudo find . -mindepth 1 -delete; mkdir -p logs; $clone exec $cmd" > "$out/raw.log" 2>&1 || true
   echo $(( $(date +%s) - t0 )) > "$out/wall_s"
   rsync -a -e "ssh ${BOX_SSH[*]}" --include='block-breakdown*.log*' --exclude='*' \
     "ubuntu@$(box_host "$box"):$R/run/logs/" "$out/" || true

@@ -1,7 +1,7 @@
 # Mined headers carry the version the chain activates
 
 Branch `harness/mined-header-version` in `clients/rustock`, on `clients-lab/harness` (d9d2d2e).
-One commit.
+Two commits.
 
 ## What and why
 
@@ -25,6 +25,21 @@ The decoder had one assumption the change exposes: four or more items after
 papyrus200 (only the test fixture; every real network activates it long before RSKIP-351)
 starts those items with the bare version byte instead, which an `ummRoot` (empty or 32 bytes)
 never is, so the decoder now checks for it before taking an `ummRoot`.
+
+## Second commit: ummRoot
+
+With the version fixed, rskj refused the next thing: `Invalid block header size: 21`
+(`campaigns/2026-10-28-c1`, rskj's 43 mined blocks replayed into rustock, rustock's 38 did
+not replay into rskj). The template decided the `ummRoot` field from
+`ChainConfig::activation_heights`, which schedules papyrus200 never on regtest, while the
+hardfork config, which decides every other header field, has regtest on vetiver900 from
+genesis, as rskj's `regtest.conf` (`papyrus200 = 0`) does. A regtest block mined here had
+21 header fields where rskj expects 22.
+
+The template now asks the hardfork config (`has_rskipumm`: papyrus200 on). The mining
+fixtures take the ladder a test wants; the two ummRoot tests move papyrus200 on the ladder
+rather than on `ChainConfig`, and `umm_root_appears_once_papyrus_is_active` also pins that
+the template ignores `ChainConfig`'s height.
 
 ## Tests
 

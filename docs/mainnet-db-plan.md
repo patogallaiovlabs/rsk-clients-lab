@@ -106,3 +106,14 @@ boxes and copied rustock's compacted seed (148 GB) to `/var/lib/rsk/rustock-seed
 5 MB/s per box over the shared uplink; rustock's half of the campaign runs when both copies
 are done. perf-lab's `6-boton` mainnet stage needs the RSKj seed uploaded again before it can
 run (`rsk-perf-lab/bin/boton-seed-upload.sh`, most of a day per box).
+
+### Boton, rustock half (2026-10-28)
+
+The first rustock run on a box failed before its first block: `Failed to open RocksDB ...
+Too many open files`. The box's soft descriptor limit is 1024 and the single-backend seed has
+2138 table files (rustock's own `max_open_files` is 512 per column family, which the opener
+exceeds anyway). `bin/boton-campaign.sh` now runs every box command under `ulimit -n 65536`
+(the hard limit is 1048576), for both clients; RSKj already capped itself at
+`database.rocksdb.maxOpenFiles=1000`. The failed attempt is kept in
+`state/logs/c3-rustock-ulimit-failure.txt`; the campaign was rerun with `lab.py run
+2026-10-27-c3 --clients rustock`.
