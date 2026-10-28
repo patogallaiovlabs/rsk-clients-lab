@@ -125,3 +125,24 @@ the mean says 1.10x faster 6/6 and the median 1.12x slower 0/6, so the verdict i
 rustock's executeMs is about twice RSKj's on mainnet-sim (86 vs 43 ms) and its
 initialValidationMs a sixth (3.6 vs 24 ms); the two nearly cancel on the boxes. The halves
 ran hours apart (RSKj 2026-10-28 01:40Z, rustock 10:45Z) on the same boxes.
+
+## Decision (2026-10-28, night): rebuild the seeds once, then keep both
+
+The live mainnet campaign (`docs/live-mining-plan.md`) found the RSKj seed gone from this
+Mac. Decided, with the user:
+
+1. Rebuild it from the tarball on Backup 1 with perf-lab's `prepare.sh` (senders funded
+   from the bridge, so the tip moves) and re-convert rustock's seed from it. The Docker VM
+   cannot hold the RSKj seed, the converted seed and the conversion's compaction peak at
+   once, so the bootstrapped RSKj seed is parked on Backup 1 during the conversion and
+   restored after it (`state/rebuild-mainnet-seed.sh`, resumable).
+2. Make rustock's import compact before it returns, so the peak falls inside the import,
+   while the RSKj seed is still an input: one harness PR in the fork. After that both
+   seeds stay in the volume for good and nothing is parked or deleted again.
+3. No rustock-to-RSKj converter: its only benefit was regenerating a seed we no longer
+   delete. Hard-linking the trie tables between the two seeds stays an idea for when disk
+   gets tight.
+4. The mainnet samples (`ecdsa@mainnet`, `mainnet-sim@mainnet`) belong to the old seed
+   and must be mined again on the new one before any further replay campaign on the
+   mainnet DB; live mining does not need them. The Boton boxes still hold the old rustock
+   seed.
