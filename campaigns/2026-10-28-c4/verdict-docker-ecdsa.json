@@ -1,0 +1,100 @@
+{
+ "where": "docker",
+ "scenario": "ecdsa",
+ "cycles": 6,
+ "verdict": "rustock faster",
+ "why": "rustock faster in 6/6 cycles, median -65.97%, sign-test p=0.03125",
+ "totalMs": {
+  "tmean": {
+   "median_pct": -65.97,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -67.54,
+    -67.19,
+    -62.76,
+    -64.26,
+    -66.29,
+    -65.64
+   ]
+  },
+  "mean": {
+   "median_pct": -66.02,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -67.44,
+    -67.04,
+    -62.92,
+    -64.19,
+    -66.22,
+    -65.81
+   ]
+  },
+  "median": {
+   "median_pct": -65.97,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -67.16,
+    -67.42,
+    -62.78,
+    -63.87,
+    -66.26,
+    -65.69
+   ]
+  }
+ },
+ "phases": {
+  "executeMs": {
+   "median_pct": -64.69,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "initialValidationMs": {
+   "median_pct": -98.17,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "onBestBlockMs": {
+   "median_pct": 67.05,
+   "rustock_faster": 0,
+   "n": 5,
+   "p": 0.0625
+  }
+ },
+ "absolute_ms": {
+  "rskj": {
+   "executeMs": 218.068,
+   "extendAlternativeChainMs": 0.0,
+   "initialValidationMs": 6.842,
+   "onBestBlockMs": 0.041,
+   "onBlockMs": 0.0,
+   "postExecuteValidationMs": 0.0,
+   "preambleMs": 0.0,
+   "processBestMs": 0.0,
+   "saveReceiptsMs": 0.0,
+   "statePersistMs": 0.0,
+   "stateRootRegisterMs": 0.0,
+   "switchChainMs": 0.0,
+   "totalMs": 227.313,
+   "txExecutionMs": 216.23
+  },
+  "rustock": {
+   "executeMs": 77.527,
+   "initialValidationMs": 0.124,
+   "onBestBlockMs": 0.09,
+   "postExecuteValidationMs": 0.001,
+   "preambleMs": 0.011,
+   "saveReceiptsMs": 0.274,
+   "switchChainMs": 0.084,
+   "totalMs": 78.135,
+   "trieSaveMs": 0.065
+  }
+ }
+}

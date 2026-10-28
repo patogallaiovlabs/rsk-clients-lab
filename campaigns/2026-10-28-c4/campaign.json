@@ -1,0 +1,356 @@
+{
+ "id": "2026-10-28-c4",
+ "dir": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/campaigns/2026-10-28-c4",
+ "status": "done",
+ "queued_at": "2026-10-28T12:33:46Z",
+ "queued_epoch": 1793190826,
+ "kind": "live",
+ "where": [
+  "docker"
+ ],
+ "scenarios": [
+  "ecdsa"
+ ],
+ "clients": [
+  "rskj",
+  "rustock"
+ ],
+ "cycles": 6,
+ "max_cycles": 12,
+ "refs": {
+  "rskj": "perf-lab/integration",
+  "rustock": "1909b1c"
+ },
+ "note": "Full live mining campaign on the small chain, rerun of 2026-10-28-c3 with rustock 1909b1c (--account-slots 500, as RSKj's accountSlots) and evm_stopMining before the arm's export; 30-minute arms, 6 cycles.",
+ "results": {
+  "docker/ecdsa": {
+   "verdict": "rustock faster",
+   "why": "rustock faster in 6/6 cycles, median -65.97%, sign-test p=0.03125"
+  }
+ },
+ "started_at": "2026-10-28T12:33:46Z",
+ "shas": {
+  "rskj": "e507f45031cf0e8a71bf571fcdbfbe9aa529a21b",
+  "rustock": "1909b1c7ea1623bee2287922bae26ebddec4ec3c"
+ },
+ "builds": {
+  "rskj": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar",
+  "rustock-docker": "clientslab-rustock:1909b1c7ea16-linux-arm64"
+ },
+ "settings": {
+  "config": {
+   "_doc": "rsk-clients-lab settings. Read by bin/*.py and bin/*.sh. README.md explains the method.",
+   "clients": [
+    "rskj",
+    "rustock"
+   ],
+   "scenarios": {
+    "mainnet-sim": {
+     "description": "k6 option 14 (mainnet-sim): storage writes, ERC-20, native transfers and calldata-heavy rollup txs, about 164 txs per block",
+     "blocks": "samples/mainnet-sim/blocks.txt.gz",
+     "reference_hashes": "samples/mainnet-sim/reference_hashes.txt",
+     "first_block": 1,
+     "last_block": 1159,
+     "threshold": 0.9,
+     "min_difference_pct": 2.0,
+     "k6_option": 14
+    },
+    "ecdsa": {
+     "description": "k6 option 7 (CPU ECDSA): signature-recovery-heavy contract calls, almost all of each block is transaction execution",
+     "blocks": "samples/ecdsa/blocks.txt.gz",
+     "reference_hashes": "samples/ecdsa/reference_hashes.txt",
+     "first_block": 1,
+     "last_block": 207,
+     "threshold": 0.9,
+     "min_difference_pct": 1.0,
+     "k6_option": 7
+    },
+    "mainnet-sim@mainnet": {
+     "description": "k6 option 14 (mainnet-sim): storage writes, ERC-20, native transfers and calldata-heavy rollup txs, about 164 txs per block, mined on the mainnet seed",
+     "db": "mainnet",
+     "k6_option": 14,
+     "blocks": "samples/mainnet-sim@mainnet/blocks.txt.gz",
+     "reference_hashes": "samples/mainnet-sim@mainnet/reference_hashes.txt",
+     "first_block": 9003580,
+     "last_block": 9003783,
+     "threshold": 0.9,
+     "min_difference_pct": 2.0,
+     "_doc": "first_block/last_block are filled from samples/<name>/meta.json once bin/build-mainnet-sample.sh has run"
+    },
+    "ecdsa@mainnet": {
+     "description": "k6 option 7 (CPU ECDSA): signature-recovery-heavy contract calls, almost all of each block is transaction execution, mined on the mainnet seed",
+     "db": "mainnet",
+     "k6_option": 7,
+     "blocks": "samples/ecdsa@mainnet/blocks.txt.gz",
+     "reference_hashes": "samples/ecdsa@mainnet/reference_hashes.txt",
+     "first_block": 9003580,
+     "last_block": 9003781,
+     "threshold": 0.9,
+     "min_difference_pct": 1.0,
+     "_doc": "first_block/last_block are filled from samples/<name>/meta.json once bin/build-mainnet-sample.sh has run"
+    }
+   },
+   "chain": {
+    "genesis": "conf/genesis_25M.json",
+    "gas_limit": 25000000,
+    "chain_id": 33,
+    "flush_every_blocks": 10
+   },
+   "campaign": {
+    "cycles": 6,
+    "max_cycles": 12,
+    "alpha": 0.05,
+    "trim": 0.1
+   },
+   "docker": {
+    "cpus": 4,
+    "memory": "6g",
+    "jvm_heap": "-Xms2G -Xmx4G",
+    "rskj_image": "eclipse-temurin:17-jre@sha256:38e0afc86a10bf4cadbf1586fb617b3a9a4d09c9a0be882e29ada4ed0895fc84",
+    "rustock_image": "clientslab-rustock",
+    "mainnet_memory": "10g"
+   },
+   "boton": {
+    "boxes": [
+     "A",
+     "B"
+    ],
+    "box_priority": 2,
+    "remote_dir": "clientslab"
+   },
+   "machines": {
+    "_doc": "Locks shared with rsk-perf-lab in ~/.research-lab/locks (bin/lib.sh). A campaign holds this Mac's Docker slot as a long holder, so perf-lab's short replays and gates go first.",
+    "long_lock_max_wait_min": 30,
+    "min_free_gb": 20
+   },
+   "mainnet_seed": {
+    "_doc": "perf-lab's mainnet seed (rsk-database-seed): the one thing read from another checkout, because the 186 GiB seed exists once. volume holds /seed (RSKj) and /rustock-seed; runs use hard-link clones in it. k6 is the rskj-k6-tests checkout live arms drive the node with (bin/live-arm.sh).",
+    "perf_lab": "../rsk-perf-lab",
+    "volume": "perflab-mainnet",
+    "runtime_image": "perflab-runtime:2",
+    "rustock_seed": "rustock-seed",
+    "k6": "../rsk-perf-lab/repos/rskj-k6-tests"
+   },
+   "live": {
+    "_doc": "Live mining arms (bin/live-arm.sh, docs/live-mining-plan.md): each client mines its own blocks under k6 for arm_minutes, in a container with these limits (perf-lab's live arms: 2 CPUs, 10 GB on the mainnet seed). The first min_block blocks of every arm are dropped (k6 deploys its contracts there); an arm counts only with min_qualifying_blocks blocks at least threshold full, a k6 success rate (k6_success_metric per k6 option, from the k6 summary) of at least k6_min_success_pct, and its blocks replayed into the other client with the same hashes. mining_coinbase is where rustock sends block rewards (RSKj derives its own from miner.coinbase.secret); REMASC pays either out 4000 blocks later, so neither arm sees the reward.",
+    "arm_minutes": 30,
+    "cpus": 2,
+    "memory": "6g",
+    "mainnet_memory": "10g",
+    "min_block": 20,
+    "min_qualifying_blocks": 20,
+    "k6_success_metric": {
+     "14": "tx_success_rate",
+     "7": "stress_call_success_rate"
+    },
+    "k6_min_success_pct": {
+     "14": 98,
+     "7": 80
+    },
+    "rpc_port": 4444,
+    "mining_coinbase": "0x1111111111111111111111111111111111111111"
+   }
+  },
+  "rskj": {
+   "_doc": "RSKj in the harness. Measured at the head of perf-lab/integration (everything rsk-perf-lab has proven), recorded per campaign.",
+   "repo": "clients/rskj",
+   "ref": "perf-lab/integration",
+   "artifact": "jar",
+   "replay": "co.rsk.cli.tools.ConnectBlocks --regtest --file <blocks>",
+   "settings": "conf/rskj/rsk.conf (rskip144 off, rskip97 at 0), conf/rskj/logback.xml, -Xms2G -Xmx4G, flushNumberOfBlocks 10"
+  },
+  "rustock": {
+   "_doc": "rustock in the harness. Built from the harness adapter branch until its upstream pull requests merge. import_args: rskj's regtest chain as the lab's rsk.conf sets it (genesis file, rskip97=0, rskj's gas-limit bounds, skipPowValidation), the trie in its own RocksDB (a fresh data dir with the default single backend is refused by the fork), flush every {flush} blocks like RSKj.",
+   "repo": "clients/rustock",
+   "ref": "clients-lab/comparison",
+   "upstream_ref": "main",
+   "artifact": "binary",
+   "import_args": [
+    "--network-id",
+    "33",
+    "--no-rpc",
+    "--log-to-stdout",
+    "--data-dir",
+    "{datadir}",
+    "--trie-backend",
+    "external",
+    "--trie-dir",
+    "{datadir}-trie",
+    "--genesis",
+    "{genesis}",
+    "--skip-pow-validation",
+    "--consensus-rule",
+    "rskip97=0",
+    "--min-gas-limit",
+    "3000000",
+    "--max-gas-limit",
+    "18446744073709551615",
+    "--import-blocks",
+    "{blocks}",
+    "--import-flush-every",
+    "{flush}",
+    "--breakdown-log",
+    "{breakdown}"
+   ],
+   "mainnet_import_args": [
+    "--network-id",
+    "33",
+    "--no-rpc",
+    "--log-to-stdout",
+    "--data-dir",
+    "{datadir}",
+    "--trie-backend",
+    "single",
+    "--genesis",
+    "{genesis}",
+    "--skip-pow-validation",
+    "--consensus-rule",
+    "rskip97=0",
+    "--min-gas-limit",
+    "3000000",
+    "--max-gas-limit",
+    "18446744073709551615",
+    "--import-blocks",
+    "{blocks}",
+    "--import-flush-every",
+    "{flush}",
+    "--breakdown-log",
+    "{breakdown}"
+   ],
+   "_mainnet_doc": "mainnet_import_args: like import_args but on a hard-link clone of the converted mainnet seed ({datadir} = the clone, rustock's own layout as --import-rskj wrote it: one RocksDB with the trie inside, network id 30), with every --hardfork and --consensus-rule of rsk-perf-lab's database-seed/seeds/mainnet/node.props behind --allow-chain-overrides (harness/mainnet-overrides). tbd1000 is accepted as a no-op: it only turns on RSKIP-559, which rustock does not implement and no sample block exercises. No genesis: mainnet's is built in.",
+   "live_args": [
+    "--network-id",
+    "33",
+    "--log-to-stdout",
+    "--data-dir",
+    "{datadir}",
+    "--trie-backend",
+    "external",
+    "--trie-dir",
+    "{datadir}-trie",
+    "--genesis",
+    "{genesis}",
+    "--skip-pow-validation",
+    "--consensus-rule",
+    "rskip97=0",
+    "--min-gas-limit",
+    "3000000",
+    "--max-gas-limit",
+    "18446744073709551615",
+    "--rpc-host",
+    "0.0.0.0",
+    "--rpc-port",
+    "4444",
+    "--dev-rpc",
+    "--wallet-file",
+    "{wallet}",
+    "--account-tx-rate-limit",
+    "false",
+    "--account-slots",
+    "500",
+    "--mine",
+    "--mine-timed",
+    "10s",
+    "--mining-coinbase",
+    "{coinbase}",
+    "--flush-every",
+    "{flush}",
+    "--breakdown-log",
+    "{breakdown}"
+   ],
+   "export_args": [
+    "--network-id",
+    "33",
+    "--log-to-stdout",
+    "--data-dir",
+    "{datadir}",
+    "--trie-backend",
+    "external",
+    "--trie-dir",
+    "{datadir}-trie",
+    "--genesis",
+    "{genesis}",
+    "--skip-pow-validation",
+    "--consensus-rule",
+    "rskip97=0",
+    "--min-gas-limit",
+    "3000000",
+    "--max-gas-limit",
+    "18446744073709551615",
+    "--no-rpc",
+    "--export-blocks",
+    "{file}",
+    "--export-from",
+    "{from}",
+    "--export-to",
+    "{to}"
+   ],
+   "mainnet_live_args": [
+    "--network-id",
+    "33",
+    "--log-to-stdout",
+    "--data-dir",
+    "{datadir}",
+    "--trie-backend",
+    "single",
+    "--genesis",
+    "{genesis}",
+    "--skip-pow-validation",
+    "--consensus-rule",
+    "rskip97=0",
+    "--min-gas-limit",
+    "3000000",
+    "--max-gas-limit",
+    "18446744073709551615",
+    "--rpc-host",
+    "0.0.0.0",
+    "--rpc-port",
+    "4444",
+    "--dev-rpc",
+    "--wallet-file",
+    "{wallet}",
+    "--account-tx-rate-limit",
+    "false",
+    "--account-slots",
+    "500",
+    "--mine",
+    "--mine-timed",
+    "10s",
+    "--mining-coinbase",
+    "{coinbase}",
+    "--flush-every",
+    "{flush}",
+    "--breakdown-log",
+    "{breakdown}"
+   ],
+   "mainnet_export_args": [
+    "--network-id",
+    "33",
+    "--log-to-stdout",
+    "--data-dir",
+    "{datadir}",
+    "--trie-backend",
+    "single",
+    "--genesis",
+    "{genesis}",
+    "--skip-pow-validation",
+    "--consensus-rule",
+    "rskip97=0",
+    "--min-gas-limit",
+    "3000000",
+    "--max-gas-limit",
+    "18446744073709551615",
+    "--no-rpc",
+    "--export-blocks",
+    "{file}",
+    "--export-from",
+    "{from}",
+    "--export-to",
+    "{to}"
+   ],
+   "_live_doc": "live_args (bin/live-arm.sh): the replay flags without --import-blocks, serving RPC on 4444 for k6, with the ten cow keys from conf/rustock-wallet.keys ({wallet}, the fork's regtest-wallet.example.keys) so eth_sendTransaction signs for the accounts the genesis funds, the account rate limiter off as in RSKj's rsk.conf, the evm_* namespace for evm_startMining, timed mining at a 10 s median like RSKj's TimedMinerClient (--mine-timed, adapter harness/timed-mining) with nonce 0 under --skip-pow-validation, the trie flushed every {flush} mined blocks and the mined-block breakdown line (adapter harness/mined-block-timing) in {breakdown}. export_args (adapter harness/export-blocks) writes blocks {from}..{to} in RSKj's ExportBlocks format to {file} for the cross replay, on a stopped data dir. The adapter branches are being written: --mine-timed, --flush-every and the --export-* flags may land under other names, and live-arm.sh reads whatever is here. mainnet_* are the same on top of mainnet_import_args.",
+   "_mainnet_args_doc": "mainnet_*_args: the same regtest configuration as *_args on the converted mainnet seed, whose trie lives in the single RocksDB backend. The seed runs as regtest (chain id 33, conf/genesis_25M.json, every hardfork at genesis): that is how RSKj mines on it in perf-lab (--regtest plus node.props), so the sample's transactions carry chain id 33. Verified 2026-10-27: 204 blocks of mainnet-sim@mainnet imported with the reference hashes."
+  }
+ },
+ "finished_at": "2026-10-28T18:58:31Z"
+}

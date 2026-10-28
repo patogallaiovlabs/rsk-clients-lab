@@ -329,3 +329,28 @@ not, for two reasons the smoke tests were too short to show:
 Also visible in the k6 summary: rustock's RPC answered in 906 ms on average (p95 3.5 s)
 against RSKj's 6.6 ms (p95 28 ms). Part of that is the refused sends being retried; the
 rerun will say how much. Rerun: `2026-10-28-c4`, rustock 1909b1c.
+
+### First full result (2026-10-28-c4): rustock 2.94x faster on its own blocks
+
+Six cycles, 30-minute arms, ecdsa, rustock 1909b1c with `--account-slots 500` and
+`evm_stopMining` before the export. Every arm counted: cross replays clean both ways in all
+six cycles, every log holding exactly its exported blocks, k6 success 99.99% or 100%, 88 to
+121 qualifying blocks per arm. `campaigns/2026-10-28-c4/report.md`.
+
+| client | blocks mined per arm | qualifying | totalMs, trimmed mean |
+|---|---|---|---|
+| RSKj | 120 to 140 | 102 to 121 | 227.3 |
+| rustock | 107 to 138 | 88 to 119 | 78.1 |
+
+rustock faster in 6/6 cycles (2.69x to 3.08x), median -65.97%, sign-test p = 0.03125. The
+same order as the sequential ecdsa replays on the small chain, so mining its own blocks costs
+rustock nothing extra. Both clients mined blocks of comparable fill (gas used 2.5 to 3.4
+billion per arm, no pattern by client), so the paired design has little to absorb.
+
+The RPC latency seen in c3 was the refused sends: with 500 account slots, k6's
+`rpc_req_duration_ms` averaged 0.9 to 1.3 ms for rustock (p95 2.3 to 3.2 ms) and 2.5 to
+2.7 ms for RSKj (p95 5.6 to 6.5 ms), with no failed requests in any arm.
+
+Open from this campaign: rustock's `onBestBlockMs` still reads 0.1 ms against RSKj's 0.0
+(both negligible on this path), and `initialValidationMs` is 6.8 ms in RSKj against 0.1 in
+rustock, the one phase besides execution with a visible difference.

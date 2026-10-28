@@ -1,0 +1,26 @@
+[2026-10-28T12:36:08Z] rskj e507f4503, rustock 1909b1c7e
+[2026-10-28T13:06:47Z] live ecdsa c1-rskj: blocks 1..122 in 1834 s
+[2026-10-28T13:39:18Z] live ecdsa c1-rustock: blocks 1..130 in 1950 s
+[2026-10-28T13:39:55Z] live ecdsa c1-rskj: 122 blocks mined, 104 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T13:39:55Z] live ecdsa c1-rustock: 130 blocks mined, 111 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T14:12:25Z] live ecdsa c2-rustock: blocks 1..115 in 1949 s
+[2026-10-28T14:43:03Z] live ecdsa c2-rskj: blocks 1..140 in 1835 s
+[2026-10-28T14:43:39Z] live ecdsa c2-rustock: 115 blocks mined, 96 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T14:43:39Z] live ecdsa c2-rskj: 140 blocks mined, 121 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T15:14:13Z] live ecdsa c3-rskj: blocks 1..126 in 1831 s
+[2026-10-28T15:46:44Z] live ecdsa c3-rustock: blocks 1..107 in 1950 s
+[2026-10-28T15:47:21Z] live ecdsa c3-rskj: 126 blocks mined, 107 qualifying, k6 99.99%, cross replay ok
+[2026-10-28T15:47:21Z] live ecdsa c3-rustock: 107 blocks mined, 88 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T16:19:52Z] live ecdsa c4-rustock: blocks 1..117 in 1949 s
+[2026-10-28T16:50:30Z] live ecdsa c4-rskj: blocks 1..139 in 1836 s
+[2026-10-28T16:51:08Z] live ecdsa c4-rustock: 117 blocks mined, 98 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T16:51:08Z] live ecdsa c4-rskj: 139 blocks mined, 121 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T17:21:45Z] live ecdsa c5-rskj: blocks 1..120 in 1834 s
+[2026-10-28T17:54:14Z] live ecdsa c5-rustock: blocks 1..124 in 1948 s
+[2026-10-28T17:54:49Z] live ecdsa c5-rskj: 120 blocks mined, 102 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T17:54:49Z] live ecdsa c5-rustock: 124 blocks mined, 104 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T18:27:20Z] live ecdsa c6-rustock: blocks 1..138 in 1949 s
+[2026-10-28T18:57:53Z] live ecdsa c6-rskj: blocks 1..126 in 1831 s
+[2026-10-28T18:58:31Z] live ecdsa c6-rustock: 138 blocks mined, 119 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T18:58:31Z] live ecdsa c6-rskj: 126 blocks mined, 108 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T18:58:31Z] docker ecdsa after 6 cycles: rustock faster (rustock faster in 6/6 cycles, median -65.97%, sign-test p=0.03125)
