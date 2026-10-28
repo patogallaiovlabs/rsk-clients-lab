@@ -310,3 +310,22 @@ the first full campaign.
 
 The first full campaign, `2026-10-28-c3` (6 cycles, 30-minute arms, ecdsa, rustock
 cb6d948), started 2026-10-28 11:3xZ; about seven hours of the Docker slot.
+
+### First full cycle (2026-10-28-c3): rustock's arm discarded twice over
+
+RSKj's arm counted (128 blocks, 109 qualifying, k6 100%, cross replay ok). rustock's did
+not, for two reasons the smoke tests were too short to show:
+
+1. **k6 success rate 68%**, under the 80% floor: 4305 stress calls refused as "transaction
+   nonce too high". The lab's RSKj runs with `transaction.accountSlots = 500` (perf-lab's
+   k6 configuration); rustock had rskj's default 16 as a constant. Section 1 above
+   guessed at the error wording; this is it. Fixed as a setting both clients now get:
+   `harness/account-slots` (1c413d3, `docs/prs/harness-account-slots.md`),
+   `--account-slots 500` in `live_args` and `mainnet_live_args`.
+2. **129 breakdown records for 123 exported blocks**: rustock's timed miner keeps going
+   through `docker stop` and the blocks it mines while shutting down are logged but not
+   exported. `bin/live-arm.sh` now calls `evm_stopMining` before reading the final height.
+
+Also visible in the k6 summary: rustock's RPC answered in 906 ms on average (p95 3.5 s)
+against RSKj's 6.6 ms (p95 28 ms). Part of that is the refused sends being retried; the
+rerun will say how much. Rerun: `2026-10-28-c4`, rustock 1909b1c.

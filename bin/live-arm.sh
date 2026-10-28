@@ -148,6 +148,10 @@ while [ "$(date +%s)" -lt "$T_END" ]; do
   [ $((n % 5)) = 0 ] && log "live arm $CLIENT $SCEN: $n min, height $(height 2>/dev/null || echo '?')"
 done
 quiesce_load || true
+# rustock keeps its timed miner going through `docker stop` and logs the blocks it mines
+# while shutting down; the export (from the height read here) would then be shorter than
+# the breakdown log (2026-10-28-c3: 129 records, 123 exported). Stop the miner first.
+[ "$CLIENT" = rustock ] && log "evm_stopMining: $(rpc '{"jsonrpc":"2.0","method":"evm_stopMining","params":[],"id":1}')"
 H=$(height) || { log "RPC gone at the end of the arm"; docker logs --tail 30 "$CT" > "$OUT/raw.log" 2>&1; exit 1; }
 docker stop -t 120 "$CT" >/dev/null; docker logs "$CT" > "$OUT/raw.log" 2>&1 || true
 docker rm -f "$CT" >/dev/null 2>&1 || true
