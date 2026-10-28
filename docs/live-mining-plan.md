@@ -284,3 +284,29 @@ Adapter pull requests in rustock, each on `harness/<topic>` and merged into
    Neither option 14 nor 7 reads it; the basic suite does. Not a blocker; noted so nobody
    reads it as "not mining".
 8. **Error strings.** Section 1: unquantified until a run.
+
+## Smoke tests (2026-10-27 night to 2026-10-28 morning)
+
+Three one-cycle campaigns on the small chain (ecdsa, k6 option 7, empty database), 5 and
+10-minute arms (`CLIENTSLAB_ARM_MINUTES`), rustock first on 428086b then cb6d948:
+
+1. `2026-10-27-c4`: rustock's mined headers were version 0 on a chain whose RSKj peers
+   emit version 2. RSKj's `decodeHeader` read the merged-mining header as the version and
+   failed with a NullPointerException. Fixed: `harness/mined-header-version` fb10dc4.
+2. `2026-10-28-c1`: with the version right, RSKj refused `Invalid block header size: 21`.
+   rustock's regtest template omitted `ummRoot`, deciding it from
+   `ChainConfig::activation_heights` (papyrus200 never on regtest) while the hardfork
+   ladder, as rskj's regtest.conf, has it at genesis. Fixed: second commit 24b0d36 on the
+   same branch (`docs/prs/harness-mined-header-version.md`).
+3. `2026-10-28-c2` (rustock cb6d948): **both cross replays pass**. RSKj's 37 blocks into
+   rustock, rustock's 39 into RSKj, every hash equal. The pipeline is validated end to end.
+   The cycle was still discarded: RSKj's arm had 17 qualifying blocks, under the 20 the
+   config asks for, because a 10-minute arm mines about 40 blocks and the first 20 are
+   dropped. Thirty-minute arms (the config default) give about 120.
+
+Per-arm figures for later comparison (10-minute arms, 2 CPUs, trimmed mean of qualifying
+blocks' `totalMs`): RSKj 220.6 ms (c2) and 227.1 ms (c1). rustock's own numbers come from
+the first full campaign.
+
+The first full campaign, `2026-10-28-c3` (6 cycles, 30-minute arms, ecdsa, rustock
+cb6d948), started 2026-10-28 11:3xZ; about seven hours of the Docker slot.
