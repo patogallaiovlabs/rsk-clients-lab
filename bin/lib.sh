@@ -14,12 +14,14 @@ log() { echo "[$(date -u +%FT%TZ)] $*"; }
 JAVA_HOME="${JAVA_HOME:-$(/usr/libexec/java_home -v 17 2>/dev/null || true)}"
 export JAVA_HOME
 
-# --- Machines: one node per machine, shared with rsk-perf-lab ----------------------------
-# The locks live in ~/.research-lab/locks and follow rsk-perf-lab's bin/lib.sh protocol
-# exactly (same directories, waiter files and priorities); change both together.
+# --- Machines: one node per machine, shared with other labs -------------------------------
+# The locks live in ~/.research-lab/locks, outside this repository, so any other lab that
+# uses the same machines can follow the protocol defined here (directories, waiter files and
+# priorities, lower first).
 #   docker            this Mac's Docker VM. A campaign takes it as a `long` holder with its
-#                     queue time as priority, so perf-lab's short replays and gates go first.
-#   boton-A, boton-B  the Boton boxes, priority 2 (perf-lab's 6-boton is 0, its replays 1).
+#                     queue time as priority, so another lab's short jobs go first.
+#   boton-A, boton-B  the Boton boxes; campaigns hold at priority 2 (0 and 1 are for more
+#                     urgent work of other labs).
 LOCKS="${RESEARCH_LAB_LOCKS:-$HOME/.research-lab/locks}"
 LAB_NAME="clients-lab"
 mkdir -p "$LOCKS"
@@ -142,7 +144,7 @@ blocks_volume() {
 
 # The database a container starts from: empty (a fresh volume), or a hard-link clone of
 # the mainnet seed for the client (docs/mainnet-db-plan.md). RSKj's clone comes from
-# perf-lab's clone.sh; rustock's seed is the converted copy in the same volume, cloned the
+# database-seed/clone.sh; rustock's seed is the converted copy in the same volume, cloned the
 # same way: tables linked, the rest copied, since RocksDB never rewrites a table.
 #   db_setup <client> <empty|mainnet> <name> <mount-point>
 # sets DATA (the docker run flags that mount it) and MAINNET_PROPS (RSKj's node.props line
@@ -151,12 +153,11 @@ db_setup() {
   local client="$1" db="$2" name="$3" mnt="$4"
   DB_KIND="$db"; DB_NAME="$name"; MAINNET_PROPS=""
   if [ "$db" = mainnet ]; then
-    local perf mvol; perf="$LAB/$(cfg .mainnet_seed.perf_lab)"; mvol=$(cfg .mainnet_seed.volume)
+    local mvol; mvol=$(cfg .mainnet_seed.volume)
     docker run --rm -v "$mvol":/v alpine rm -rf "/v/$name"
     if [ "$client" = rskj ]; then
-      ( cd "$perf/database-seed" && SEED=mainnet SIM_ROOT="$perf" PERF_LAB_LIB="$perf/bin/lib.sh" \
-          RUNTIME_IMAGE="$(cfg .mainnet_seed.runtime_image)" ./clone.sh "$name" ) >/dev/null
-      MAINNET_PROPS="-Ddatabase.rocksdb.maxOpenFiles=1000 $(cat "$perf/database-seed/seeds/mainnet/node.props")"
+      "$LAB/bin/seed.sh" clone "$name" >/dev/null
+      MAINNET_PROPS="-Ddatabase.rocksdb.maxOpenFiles=1000 $(cat "$(seed_dir)/node.props")"
     else
       docker run --rm -v "$mvol":/v alpine sh -c "cd /v/$(cfg .mainnet_seed.rustock_seed) && find . -type d -exec mkdir -p /v/$name/{} \; \
         && find . -type f -name '*.sst' -exec ln {} /v/$name/{} \; && find . -type f ! -name '*.sst' -exec cp -a {} /v/$name/{} \;"
@@ -175,9 +176,10 @@ db_drop() {
   DB_NAME=""
 }
 # The height of the mainnet seed: a run on it starts at seed_tip and mines or imports above it.
-seed_tip() { jq -r .seed_tip "$LAB/$(cfg .mainnet_seed.perf_lab)/database-seed/seeds/mainnet/meta.json"; }
+seed_dir() { echo "$LAB/$(cfg .mainnet_seed.seed_tooling)/seeds/mainnet"; }
+seed_tip() { jq -r .seed_tip "$(seed_dir)/meta.json"; }
 
-# No k6 load on this host: perf-lab's quiesce_local_load. infinite.sh first, so it does not
+# No k6 load on this host. infinite.sh first, so it does not
 # start another k6 run; k6 gets SIGTERM and prints its summary before it exits.
 quiesce_load() {
   pkill -f "[i]nfinite.sh" 2>/dev/null || true

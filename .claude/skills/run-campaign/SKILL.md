@@ -10,7 +10,7 @@ nohup bin/lab.py run <id> > state/logs/<id>.log 2>&1 &             # or: bin/lab
 bin/lab.py status [<id>]
 ```
 
-- Defaults: RSKj at `perf-lab/integration`, rustock at `clients-lab/comparison`, 6 cycles (up to
+- Defaults: RSKj at the ref in `clients/rskj.json`, rustock at `clients-lab/comparison`, 6 cycles (up to
   12 while undecided). Override with `--rskj`, `--rustock`, `--cycles`, and say why in `--note`.
 - `--kind live`: live mining instead of replay (README "Live mining"). Docker only; each cycle is
   one 30-minute arm per client plus the cross replays, so count on 80 minutes per cycle on the
@@ -19,7 +19,7 @@ bin/lab.py status [<id>]
   `config.json` `mainnet_seed.k6`. A `status: failed` saying "live arm discarded" is an arm that
   measured nothing (few full blocks, k6 rejected); rerun `bin/lab.py run <id>` to repeat the cycle.
 - A campaign waits for the shared machines (`.claude/rules/shared-machines.md`); a long wait
-  behind perf-lab is normal. `ls ~/.research-lab/locks/*` shows holders and waiters.
+  behind another lab is normal. `ls ~/.research-lab/locks/*` shows holders and waiters.
 - When it finishes: `campaigns/<id>/report.md` (facts). Then agent-analyst writes
   `analysis.md` and agent-writer `summary.md`.
 - `status: consensus-failure`: hand it to agent-validator. `status: failed`: agent-diagnose;

@@ -6,7 +6,7 @@ Lerner's `main` 43dc5e5). One commit, f8ead22.
 
 ## What and why
 
-The lab's mainnet samples are blocks RSKj mined on top of perf-lab's mainnet seed (tip
+The lab's mainnet samples are blocks RSKj mined on top of the lab's mainnet seed (tip
 #9,003,579) under `node.props`: mainnet's activation heights, plus `reed810`, `tbd1000`,
 `rskip351` and `rskip535` at #9,002,504, `rskip536` at #8,804,200, and no real merged mining.
 RSKj takes those as `-D` overrides. rustock's harness branch refused every chain option on

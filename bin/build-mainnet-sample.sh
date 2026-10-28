@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
-# Mine a block sample on top of perf-lab's mainnet seed with RSKj under one k6 scenario,
+# Mine a block sample on top of the mainnet seed with RSKj under one k6 scenario,
 # until enough blocks are full, and export it with its reference hashes.
 #
 #   bin/build-mainnet-sample.sh <name> <k6-option> [min-qualifying] [threshold] [max-hours]
 #   -> samples/<name>/{blocks.txt.gz, reference_hashes.txt, meta.json}, blocks seed_tip+1..H
 #
-# The seed, its clone tooling and the k6 suite live in rsk-perf-lab (config.json
-# "mainnet_seed"): this is the one place the lab reads another checkout, because the seed
-# is 186 GiB and exists once. The node runs as a perf-lab mainnet live arm does
-# (bin/live-arm-mainnet.sh there): a hard-link clone of the seed, node.props activations,
+# The seed's tooling and the k6 suite are the lab's submodules (config.json "mainnet_seed").
+# The node runs as a live arm on the seed does: a hard-link clone of the seed, node.props activations,
 # 1000 open files, 10 GB memory, timed mining at a 10 s median, 25M gas, integration build.
 # Holds the Docker slot for the whole run.
 set -euo pipefail
@@ -16,9 +14,8 @@ set -euo pipefail
 NAME="${1:?usage: build-mainnet-sample.sh <name> <k6-option> [min-qualifying] [threshold] [max-hours]}"
 OPT="${2:?}"; WANT="${3:-200}"; THR="${4:-0.9}"; MAX_H="${5:-3}"
 OUTD="$LAB/samples/$NAME"; mkdir -p "$OUTD"
-PERF="$LAB/$(cfg .mainnet_seed.perf_lab)"
-SEED_DIR="$PERF/database-seed"; META="$SEED_DIR/seeds/mainnet/meta.json"; PROPS="$SEED_DIR/seeds/mainnet/node.props"
-K6="$PERF/repos/rskj-k6-tests"; VOL=$(cfg .mainnet_seed.volume); CLONE="clientslab-sample"; CT="clientslab-sample"
+META="$(seed_dir)/meta.json"; PROPS="$(seed_dir)/node.props"
+K6="$LAB/$(cfg .mainnet_seed.k6)"; VOL=$(cfg .mainnet_seed.volume); CLONE="clientslab-sample"; CT="clientslab-sample"
 TIP=$(jq -r .seed_tip "$META"); GAS=$(cfg .chain.gas_limit); FLUSH=$(cfg .chain.flush_every_blocks)
 JAR=$(bin/build-client.sh rskj "$(jq -r .ref "$LAB/clients/rskj.json")" | tail -1)
 SHA=$(git -C "$LAB/clients/rskj" rev-parse HEAD)
@@ -47,7 +44,7 @@ trap cleanup EXIT
 quiesce_load; docker rm -f "$CT" >/dev/null 2>&1 || true
 docker run --rm -v "$VOL":/v alpine rm -rf "/v/$CLONE"
 log "sample '$NAME': cloning the mainnet seed (tip #$TIP)"
-( cd "$SEED_DIR" && SEED=mainnet SIM_ROOT="$PERF" PERF_LAB_LIB="$PERF/bin/lib.sh" RUNTIME_IMAGE="$RUNTIME" ./clone.sh "$CLONE" )
+"$LAB/bin/seed.sh" clone "$CLONE"
 
 log "sample '$NAME': mining on the seed with ${SHA:0:9} under k6 option $OPT until $WANT blocks >= ${THR} full"
 IS_MINER=true node co.rsk.Start "--regtest" -d --name "$CT" -p 4444:4444 -p 4445:4445 --cpus 4 --memory 10g >/dev/null

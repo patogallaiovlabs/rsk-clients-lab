@@ -11,8 +11,8 @@
 #
 # Each box runs one client at a time from an empty database, natively (the RSKj jar on the
 # box's JDK 17, the rustock binary built in Ubuntu 22.04). Holding a box for a few
-# minutes per slot, the campaign checks between cycles whether perf-lab waits with a more
-# urgent priority (its 6-boton is 0, its replays 1; campaigns hold at 2) and hands the boxes
+# minutes per slot, the campaign checks between cycles whether another lab waits with a more
+# urgent priority (campaigns hold at 2; 0 and 1 are more urgent) and hands the boxes
 # over, keeping the cycles it finished.
 #
 # Writes campaigns/<id>/raw/boton/<scenario>/c<k>-{fwd,rev}/{A,B}/ (bin/check-run.sh output).
@@ -31,16 +31,15 @@ GEN=$(basename "$(cfg .chain.genesis)")
 CLIENTS=" $(jq -r '(.clients // ["rskj","rustock"]) | join(" ")' "$C") "
 wanted() { case "$CLIENTS" in *" $1 "*) return 0 ;; esac; return 1; }
 # Scenarios on the mainnet DB (config.json "db": "mainnet") start from a hard-link clone of
-# the seed staged on the box: perf-lab's RSKj seed (bin/boton-seed-upload.sh there) for
-# RSKj, this lab's converted seed for rustock. node.props carries the seed's activations.
+# the seed staged on the box: the RSKj seed for RSKj, the converted seed for rustock.
+# node.props carries the seed's activations.
 DB=$(cfg "$S.db // \"empty\"")
-PERF="$LAB/$(cfg .mainnet_seed.perf_lab)"
 RSKJ_SEED=/var/lib/rsk/mainnet-seed/seed/test/local-regtest/database
 RUSTOCK_SEED=/var/lib/rsk/rustock-seed
 # The clone must live on the seed's volume (hard links do not cross file systems); the
 # run directory is on the root disk.
 DBDIR=db; [ "$DB" = mainnet ] && DBDIR=/var/lib/rsk/clientslab-db
-MAINNET_PROPS=""; [ "$DB" = mainnet ] && MAINNET_PROPS="-Ddatabase.rocksdb.maxOpenFiles=1000 $(cat "$PERF/database-seed/seeds/mainnet/node.props")"
+MAINNET_PROPS=""; [ "$DB" = mainnet ] && MAINNET_PROPS="-Ddatabase.rocksdb.maxOpenFiles=1000 $(cat "$(seed_dir)/node.props")"
 
 lock_boxes() { box_lock A "$PRIO"; box_lock B "$PRIO"; }
 unlock_boxes() { box_unlock B; box_unlock A; }
@@ -140,7 +139,7 @@ while [ $k -lt "$MAX" ]; do
     case "$CLIENTS" in " rskj rustock "|" rustock rskj ") ;; *) break ;; esac
   fi
   if box_wanted A "$PRIO" || box_wanted B "$PRIO"; then
-    log "boton: perf-lab waits for a box with a more urgent priority; handing both over"
+    log "boton: another lab waits for a box with a more urgent priority; handing both over"
     unlock_boxes; sleep 30; lock_boxes
   fi
 done

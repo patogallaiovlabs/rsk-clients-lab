@@ -1,14 +1,13 @@
 # Plan: live mining under k6 load, RSKj vs rustock
 
 Status: proposed 2026-10-27, nothing built. Everything below was read in the code at rustock
-`clients-lab/comparison` (8eb2285, on Lerner's 43dc5e5), RSKj `perf-lab/integration`, the k6
-suite in `rsk-perf-lab/repos/rskj-k6-tests` and perf-lab's live scripts. Where a claim is an
+`clients-lab/comparison` (8eb2285, on Lerner's 43dc5e5), RSKj's integration branch, the k6
+suite (`k6-tests/`) and the live scripts that preceded the lab's. Where a claim is an
 inference rather than something read, the text says so.
 
 The replay campaigns feed both clients the same blocks. A live campaign has each client mine
-its own blocks under the same k6 load, as perf-lab's `5-live` and `6-boton` do for RSKj
-(`bin/bench.sh live`, `scripts/local-ab.sh`, `bin/live-arm-mainnet.sh`,
-`scripts/boton/run-counterbalanced.sh`). The statistic stays perf-lab's: per arm, the 10%
+its own blocks under the same k6 load, as RSKj's own live A/B benchmarks do. The statistic
+stays the same: per arm, the 10%
 trimmed mean of `totalMs` over blocks at least 90% full, paired cycles, exact sign test.
 
 ## 1. Can k6 drive rustock today?
@@ -42,7 +41,7 @@ Accounts and keys. `conf/genesis_25M.json` funds the ten regtest accounts (`cd2a
 `keccak256("cow1")` to `keccak256("cow9")`: RSKj's regtest wallet derives them from those
 seeds, and the fork ships the same ten in `regtest-wallet.example.keys`, loaded with
 `--wallet-file`. On the mainnet seed the credited list in
-`rsk-perf-lab/database-seed/seeds/mainnet/meta.json` is the same thirteen genesis addresses
+`database-seed/seeds/mainnet/meta.json` is the same thirteen genesis addresses
 plus two more; the ten cow accounts are among them, so the same key file serves both chains.
 
 Someone has run the battery against the fork: commit d73ce31 "Four RPC defects the
@@ -60,11 +59,11 @@ Gaps, all harness-only:
 - Something must call `evm_startMining` once after the node is up, or the adapter below adds
   a flag that starts the miner at boot. Options 14 and 7 never call it.
 - The error wording mismatch above. Not an adapter item: aligning error strings changes what
-  the client answers, and the k6 side is perf-lab's. Measure the failure rate first.
+  the client answers, and the k6 side is the suite's. Measure the failure rate first.
 
 ## 2. Mining parity
 
-RSKj, as perf-lab runs it (`rsk/Dockerfile` entrypoint, `rsk/rsk.conf`): `TimedMinerClient`
+RSKj, as the runtime image runs it (`docker/runtime/Dockerfile` entrypoint, `conf/rskj/rsk.conf`): `TimedMinerClient`
 schedules each block after a delay drawn from an exponential distribution with median
 `miner.client.medianBlockTime` (10 s in the image; the 5 s in `rsk.conf` is overridden by
 the `-D` flag), floor 100 ms, the median scaled by the ratio of the current difficulty to the
@@ -153,7 +152,7 @@ nonce handling, RPC. Two differences stay. The flush is on every block in rustoc
 as RSKj does; the template's execution is outside `totalMs` in both.
 
 The analyzer (`bin/analyze_block_breakdown.py`) parses `key=value` pairs and needs no change.
-perf-lab's live arm check (`bench.sh`) reads a timestamp from the first 19 characters of each
+The live arm check this lab started from read a timestamp from the first 19 characters of each
 line, which rustock's line does not carry; the lab's own check should use block numbers
 above the seed tip instead, which both lines carry.
 
@@ -171,7 +170,7 @@ apply. Three checks replace it, all required for an arm to count:
    seconds; the cost is starting the node on a clone, a few minutes each on the mainnet seed.
 2. **Mined blocks are the node's own.** Every breakdown line has a block number above the
    seed tip (1159 or 9,003,579) and the log starts empty; exactly one k6 driver ran
-   (perf-lab's checks in `bench.sh`, kept).
+   (checks kept from RSKj's live A/B benchmark).
 3. **k6 client-side checks.** Option 14's threshold `tx_success_rate > 0.98` and option 7's
    revert sampling (`pollSample`) must hold; the k6 summary of each arm is kept with the arm.
    An arm with a success rate below the threshold measured a node that rejected the load and
@@ -194,20 +193,20 @@ summary collected, the node stopped, the blocks exported, the database dropped. 
 Machines:
 
 - **Docker on this Mac**: the two clients in containers with the same limits. The replay
-  campaigns use 4 CPUs and 6 GB; perf-lab's live arms use 2 CPUs. Take 2 CPUs and 6 GB for
-  the small chain and 10 GB on the mainnet seed, as perf-lab does, so the numbers can be read
-  beside perf-lab's. k6 runs on the host against `localhost:4444`, as in `local-ab.sh`.
+  campaigns use 4 CPUs and 6 GB; RSKj's live A/B benchmarks use 2 CPUs. Take 2 CPUs and 6 GB
+  for the small chain and 10 GB on the mainnet seed, as they do, so the numbers can be read
+  beside theirs. k6 runs on the host against `localhost:4444`.
 - **Boton**: native binaries, counterbalanced as `bin/boton-campaign.sh` does: one slot RSKj
   on A and rustock on B, the next swapped. k6 runs on the box (`run-load.sh`), so the boxes
-  need the k6 binary and Node, which perf-lab's deploy already installs. Small chain only
+  need the k6 binary and Node, which the boxes' setup already installs. Small chain only
   until the rustock seed is on the boxes (`docs/mainnet-db-plan.md` decided sequential there).
 
 Chains, in order:
 
 1. **Small chain** from `genesis_25M.json`, empty database. Cheapest, and the k6 setup
    deploys its contracts in the first blocks. The first 20 blocks are dropped
-   (`--min-block 20`, as perf-lab does), which also removes the deployment blocks.
-2. **Mainnet seed**: RSKj on a clone of `perflab-mainnet:/seed` with `node.props`;
+   (`--min-block 20`), which also removes the deployment blocks.
+2. **Mainnet seed**: RSKj on a clone of the seed volume's `/seed` with `node.props`;
    rustock on a clone of the converted seed (`docs/mainnet-db-plan.md` steps 4 and 5, plus
    `harness/mainnet-overrides`). The ten cow accounts are credited there, so the same wallet
    file works. Docker only.
@@ -216,7 +215,7 @@ Time per campaign: an arm is 30 minutes plus about 5 minutes of start, collectio
 replay on the small chain, and about 10 on the mainnet seed (opening a 186 GiB database takes
 minutes). Six cycles of two arms and two scenarios: 24 arms, about 14 hours on the small
 chain and 16 on the seed; up to twice that at 12 cycles. Boton: 6 cycles of 2 slots of
-about 40 minutes per scenario, 16 hours, the same as perf-lab's `6-boton`.
+about 40 minutes per scenario, 16 hours.
 
 Scripts the lab needs:
 
@@ -269,7 +268,7 @@ Adapter pull requests in rustock, each on `harness/<topic>` and merged into
    that rejects more sends (the error wording of section 1) or answers RPC more slowly gets
    less load, so fewer blocks qualify as full and the trimmed mean is over a different
    population. Report qualifying blocks, `txCount` and the k6 success rate per arm, and
-   discard arms under 20 qualifying blocks as perf-lab does.
+   discard arms under 20 qualifying blocks.
 4. **Unmeasured CPU.** The template build, the RPC server and the pool run beside the
    connect and compete for the 2 CPUs. RSKj rebuilds a candidate on every new transaction,
    rustock once per block. `totalMs` would then include contention that the replay does not
@@ -278,8 +277,8 @@ Adapter pull requests in rustock, each on `harness/<topic>` and merged into
 5. **Cross replay on the mainnet seed.** Each cross replay opens a second clone of a
    186 GiB database; disk and minutes per arm. The clone budget in `docs/mainnet-db-plan.md`
    step 1 was written for one clone at a time.
-6. **No k6 on the Boton boxes for rustock yet.** perf-lab's deploy installs the suite for its
-   own runs; the lab's Boton slot has never started k6. Inferred to be a copy of `run-load.sh`.
+6. **No k6 on the Boton boxes for rustock yet.** The boxes' setup installs the suite for
+   RSKj's runs; the lab's Boton slot has never started k6. Inferred to be a copy of `run-load.sh`.
 7. **`eth_mining` answers false** in rustock whatever the miner does (`eth::eth_mining`).
    Neither option 14 nor 7 reads it; the basic suite does. Not a blocker; noted so nobody
    reads it as "not mining".
@@ -317,8 +316,8 @@ RSKj's arm counted (128 blocks, 109 qualifying, k6 100%, cross replay ok). rusto
 not, for two reasons the smoke tests were too short to show:
 
 1. **k6 success rate 68%**, under the 80% floor: 4305 stress calls refused as "transaction
-   nonce too high". The lab's RSKj runs with `transaction.accountSlots = 500` (perf-lab's
-   k6 configuration); rustock had rskj's default 16 as a constant. Section 1 above
+   nonce too high". The lab's RSKj runs with `transaction.accountSlots = 500` (what the
+   k6 suite assumes); rustock had rskj's default 16 as a constant. Section 1 above
    guessed at the error wording; this is it. Fixed as a setting both clients now get:
    `harness/account-slots` (1c413d3, `docs/prs/harness-account-slots.md`),
    `--account-slots 500` in `live_args` and `mainnet_live_args`.
@@ -358,11 +357,11 @@ rustock, the one phase besides execution with a visible difference.
 ### Mainnet seed (2026-10-28-c5): blocked on the RSKj seed
 
 `2026-10-28-c5` (live ecdsa on the mainnet seed) failed in its first arm with "no seed in
-volume perflab-mainnet": this Mac's copy of perf-lab's RSKj seed was deleted on 2026-10-28
+the seed volume": this Mac's copy of the RSKj seed was deleted on 2026-10-28
 to make room for rustock's seed compaction (`docs/mainnet-db-plan.md`), and the boxes' copies
 went the same way. Only `rustock-seed` (148 GB) is in the volume. Rebuilding needs the
-source tarball on the external disk "Backup 1" (not attached) and perf-lab's
-`database-seed/prepare.sh extract` then `bootstrap`; a rebuild now funds the senders from
+source tarball on the external disk "Backup 1" (not attached) and `bin/seed.sh extract`
+then `bootstrap`; a rebuild now funds the senders from
 the bridge instead of minting, so its tip and state differ from the seed rustock's was
 converted from, and rustock's seed would have to be converted again for the two to be the
 same chain. Live mining on the mainnet seed waits on that decision.

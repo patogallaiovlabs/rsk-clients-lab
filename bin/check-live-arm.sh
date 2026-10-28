@@ -14,7 +14,7 @@
 #   3. k6: the scenario's success rate (config.json live.k6_success_metric per k6 option,
 #      read from the k6 summary) at least live.k6_min_success_pct;
 #   4. at least live.min_qualifying_blocks blocks at least threshold full, after the first
-#      live.min_block blocks of the arm (perf-lab's rule for a live arm).
+#      live.min_block blocks of the arm.
 # Exit 0 when the arm counts, 3 when the cross replay failed (a consensus finding, which
 # stops the campaign), 1 when the arm measured nothing and is discarded.
 set -euo pipefail

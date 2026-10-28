@@ -4,7 +4,7 @@
     stats.py docker <scenario-dir>   # <dir>/c<k>-rskj, <dir>/c<k>-rustock (bin/replay-docker.sh output)
     stats.py boton  <scenario-dir>   # <dir>/c<k>-fwd/{A,B}, <dir>/c<k>-rev/{A,B}
 
-Prints one JSON object. The rule is rsk-perf-lab's (its bin/abstats.py), read as a
+Prints one JSON object. The rule is the one RSKj's own A/B benchmarks use, read as a
 two-sided comparison. The cycle is the unit of replication: blocks within one run share a
 process, page cache and database, so pooling blocks gives a meaninglessly tight interval.
 Each cycle gives one paired difference, rustock vs RSKj, in percent of the per-run 10%

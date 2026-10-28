@@ -6,3 +6,9 @@
 	path = clients/rustock
 	url = git@github.com:patogallaiovlabs/rustock.git
 	branch = clients-lab/comparison
+[submodule "database-seed"]
+	path = database-seed
+	url = git@github.com:patogallaiovlabs/rsk-database-seed.git
+[submodule "k6-tests"]
+	path = k6-tests
+	url = git@github.com:patogallaiovlabs/rskj-k6-tests.git

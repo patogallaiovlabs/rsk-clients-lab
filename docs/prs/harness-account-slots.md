@@ -10,7 +10,7 @@ pool ahead of its state nonce; a nonce at or past the state nonce plus the slots
 as "transaction nonce too high". rustock has the same rule in `PoolConfig::account_slots`,
 with rskj's default of 16, but no way to set it.
 
-The lab runs rskj with `accountSlots = 500` (rsk-perf-lab's configuration for its k6 suite,
+The lab runs rskj with `accountSlots = 500` (the configuration its k6 suite assumes,
 which signs bursts of transactions per account). In the first full live mining cycle
 (`campaigns/2026-10-28-c3`, k6 option 7) rskj accepted every stress call and rustock
 refused 32% of them as nonce too high, so rustock's arm fell under the 80% success rate the

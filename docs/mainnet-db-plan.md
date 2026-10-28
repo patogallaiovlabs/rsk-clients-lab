@@ -3,16 +3,16 @@
 Status: approved 2026-10-27; conversion on this Mac started the same day.
 
 Today both clients replay from an empty database, so every block touches a state of a few
-MB. On a real state (perf-lab's mainnet seed, a 125 GB unitrie) the trie reads and writes
+MB. On a real state (the mainnet seed, a 125 GB unitrie) the trie reads and writes
 dominate, which is where the two clients differ most (`campaigns/2026-10-26-c1/analysis.md`).
 This plan brings rustock onto that seed.
 
 ## What exists
 
-- **The seed.** Docker volume `perflab-mainnet`, `/seed`: an RSKj mainnet database at tip
+- **The seed.** The seed volume (`config.json` `mainnet_seed.volume`), `/seed`: an RSKj mainnet database at tip
   #9,003,579 (hash `0x471f0ffc…`), 186 GiB: unitrie 125 GB, blocks 36 GB, receipts 25 GB.
-  `rsk-perf-lab/database-seed/seeds/mainnet/{meta.json,node.props}` describe it. Runs use a
-  hard-link clone made in seconds (`database-seed/clone.sh`).
+  `database-seed/seeds/mainnet/{meta.json,node.props}` describe it. Runs use a
+  hard-link clone made in seconds (`bin/seed.sh clone`).
 - **Its activations are not mainnet's.** `node.props` schedules `reed810`, `tbd1000`,
   `rskip351` and `rskip535` at #9,002,504 (the funding block) and `rskip536` at #8,804,200,
   so every block mined on the seed runs under rules mainnet has not activated. RSKj reads
@@ -41,7 +41,7 @@ This plan brings rustock onto that seed.
    `tbd1000` to nothing and the report must say so.
 3. **Sample.** Mine blocks on a clone of the seed with RSKj under k6 (mainnet-sim and
    ecdsa, as `bin/build-sample.sh` does on the small chain, using
-   `rsk-perf-lab/bin/live-arm-mainnet.sh` for the node) until enough are full, then
+   the runtime image's entrypoint for the node) until enough are full, then
    `ExportBlocks` from #9,003,580 up and record the reference hashes. Target about 200
    blocks per scenario; full 25M blocks on this state take 30-60 ms each in RSKj.
 4. **Conversion.** `rustock-cli --import-rskj /seed/test/local-regtest/database`
@@ -59,11 +59,11 @@ This plan brings rustock onto that seed.
 ## Decisions (2026-10-27)
 
 - **Where the seeds live.** The Boton volumes (`/var/lib/rsk`, 295 GB) hold the RSKj seed with
-  90 GB free, not enough for both. Decided: convert on this Mac (`perflab-mainnet:/rustock-seed`,
+  90 GB free, not enough for both. Decided: convert on this Mac (`/rustock-seed` in the seed volume,
   about 160 GB; Docker campaigns stay paired), and on Boton run **sequentially**: all RSKj
   cycles on the existing database, then remove it, upload the rustock seed, run the rustock
   cycles. The report must say the Boton design was sequential, not counterbalanced. Afterwards
-  the boxes hold rustock's seed; perf-lab's `6-boton` mainnet-DB stage needs the RSKj seed
+  the boxes hold rustock's seed; any later RSKj work on the mainnet DB there needs the RSKj seed
   uploaded again (hours per box) before it can resume.
 - **rustock's trie engine:** the default, `rocksdb` (`--trie-backend single`). `flatdb` is
   experimental in the fork and can be a later arm of its own.
@@ -75,7 +75,7 @@ This plan brings rustock onto that seed.
 The converted seed's trie compaction rewrites the whole trie (about 125 GB) before deleting
 any input, which this Mac cannot hold beside both seeds. Decided: mine the samples and run the
 RSKj replay cycles here first, then delete this Mac's copy of the RSKj seed (the boxes keep
-theirs; perf-lab is paused), compact rustock's seed and rebuild its index, run the rustock
+theirs), compact rustock's seed and rebuild its index, run the rustock
 cycles, and copy the compacted seed (about 160 GB) to the boxes. The Docker comparison on the
 mainnet DB is therefore sequential too, and the report says so.
 
@@ -83,7 +83,7 @@ mainnet DB is therefore sequential too, and the report says so.
 
 The first rustock replay on the compacted seed diverged at block #9,003,580. The cause was
 the lab's configuration, not the conversion: the sample's transactions carry chain id 33
-(`v = 101`), because perf-lab's RSKj runs on the mainnet seed with `--regtest` and
+(`v = 101`), because RSKj runs on the mainnet seed with `--regtest` and
 `node.props` (regtest consensus on a mainnet state). rustock replayed under `--network-id 30`
 and the activation ladder of `harness/mainnet-overrides`, so it recovered different senders.
 With the regtest configuration of the small chain (`--network-id 33`, `conf/genesis_25M.json`,
@@ -95,17 +95,17 @@ but this comparison does not use it.
 ## Boton (2026-10-28)
 
 The boxes have 2 CPUs and 7 GB of RAM; their data volume (`/var/lib/rsk`, 295 GB) held
-perf-lab's RSKj seed (`mainnet-seed/seed`, 186 GB) and perf-lab's clone of it (`database`).
+the RSKj seed (`mainnet-seed/seed`, 186 GB) and a clone of it (`database`).
 `bin/boton-campaign.sh` now runs the listed clients only and, on the mainnet DB, starts each
 run from a hard-link clone of the seed made on that volume (`/var/lib/rsk/clientslab-db`;
 links do not cross file systems, and the run directory is on the root disk). Campaign
 `2026-10-27-c3` ran RSKj's 24 runs first, all with the reference hashes: mainnet-sim about
-75 ms/block on box A and 110 on box B, ecdsa 386 and 541 (box B is the slower box, as perf-lab
-measured). Then `bin/boton-rustock-seed.sh` removed the RSKj seed and its clones from both
+75 ms/block on box A and 110 on box B, ecdsa 386 and 541 (box B is the slower box, as earlier
+runs measured). Then `bin/boton-rustock-seed.sh` removed the RSKj seed and its clones from both
 boxes and copied rustock's compacted seed (148 GB) to `/var/lib/rsk/rustock-seed`, at about
 5 MB/s per box over the shared uplink; rustock's half of the campaign runs when both copies
-are done. perf-lab's `6-boton` mainnet stage needs the RSKj seed uploaded again before it can
-run (`rsk-perf-lab/bin/boton-seed-upload.sh`, most of a day per box).
+are done. RSKj on the mainnet DB there needs the RSKj seed uploaded again (most of a day
+per box).
 
 ### Boton, rustock half (2026-10-28)
 
@@ -131,7 +131,7 @@ ran hours apart (RSKj 2026-10-28 01:40Z, rustock 10:45Z) on the same boxes.
 The live mainnet campaign (`docs/live-mining-plan.md`) found the RSKj seed gone from this
 Mac. Decided, with the user:
 
-1. Rebuild it from the tarball on Backup 1 with perf-lab's `prepare.sh` (senders funded
+1. Rebuild it from the tarball on Backup 1 with `bin/seed.sh` (senders funded
    from the bridge, so the tip moves) and re-convert rustock's seed from it. The Docker VM
    cannot hold the RSKj seed, the converted seed and the conversion's compaction peak at
    once, so the bootstrapped RSKj seed is parked on Backup 1 during the conversion and

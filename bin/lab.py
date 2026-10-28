@@ -176,7 +176,7 @@ def run_docker(c, scen):
                for x in clients):
             continue  # done in an earlier attempt
         order = clients if k % 2 or len(clients) == 1 else tuple(reversed(clients))
-        # One cycle holds the Docker slot as a long holder: perf-lab's short replays and gates
+        # One cycle holds the Docker slot as a long holder: another lab's short jobs
         # may run between cycles, never between the two runs of one cycle.
         env = {"CLIENTSLAB_PRIORITY": str(c["queued_epoch"])}
         cmd = f'. "{BIN}/lib.sh"; lock_acquire docker "long:$CLIENTSLAB_PRIORITY"; trap "lock_release docker" EXIT; ' \

@@ -1,5 +1,5 @@
 {
-  "_doc": "RSKj in the harness. Measured at the head of perf-lab/integration (everything rsk-perf-lab has proven), recorded per campaign.",
+  "_doc": "RSKj in the harness. Measured at the head of ref, the integration branch of the lab's RSKj fork (the proven block-processing changes), recorded per campaign.",
   "repo": "clients/rskj",
   "ref": "perf-lab/integration",
   "artifact": "jar",

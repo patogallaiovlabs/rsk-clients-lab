@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Import a block sample from rsk-perf-lab and make it replayable from genesis.
+# Import a block sample mined elsewhere on a seed database and make it replayable from genesis.
 #
 #   bin/import-sample.sh <name> <seed.tar.gz> <blocks_2_to_N.txt.gz> <reference_hashes.txt>
 #
-# perf-lab replays blocks 2..N on top of a seed database that already holds block 1 (an RSKj
+# Such a sample holds blocks 2..N on top of a seed database that already holds block 1 (an RSKj
 # RocksDB). rustock cannot read that database, so both clients here start from an empty one
 # and replay 1..N: block 1 is exported from the seed with RSKj's ExportBlocks and prepended.
 # Writes samples/<name>/{blocks.txt.gz, reference_hashes.txt, meta.json}; the block file is
@@ -13,7 +13,7 @@ set -euo pipefail
 
 NAME="${1:?name}"; SEED="${2:?seed}"; BLOCKS="${3:?blocks}"; HASHES="${4:?hashes}"
 OUT="$LAB/samples/$NAME"; mkdir -p "$OUT"
-JAR=$(bin/build-client.sh rskj perf-lab/integration | tail -1)
+JAR=$(bin/build-client.sh rskj "$(jq -r .ref "$LAB/clients/rskj.json")" | tail -1)
 TMP="$STATE/import-$NAME"; rm -rf "$TMP"; mkdir -p "$TMP"
 trap 'rm -rf "$TMP"' EXIT
 tar xzf "$SEED" -C "$TMP"

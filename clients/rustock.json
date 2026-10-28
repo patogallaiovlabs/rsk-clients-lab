@@ -56,7 +56,7 @@
     "--breakdown-log",
     "{breakdown}"
   ],
-  "_mainnet_doc": "mainnet_import_args: like import_args but on a hard-link clone of the converted mainnet seed ({datadir} = the clone, rustock's own layout as --import-rskj wrote it: one RocksDB with the trie inside, network id 30), with every --hardfork and --consensus-rule of rsk-perf-lab's database-seed/seeds/mainnet/node.props behind --allow-chain-overrides (harness/mainnet-overrides). tbd1000 is accepted as a no-op: it only turns on RSKIP-559, which rustock does not implement and no sample block exercises. No genesis: mainnet's is built in.",
+  "_mainnet_doc": "mainnet_import_args: like import_args but on a hard-link clone of the converted mainnet seed ({datadir} = the clone, rustock's own layout as --import-rskj wrote it: one RocksDB with the trie inside, network id 30), with every --hardfork and --consensus-rule of database-seed/seeds/mainnet/node.props behind --allow-chain-overrides (harness/mainnet-overrides). tbd1000 is accepted as a no-op: it only turns on RSKIP-559, which rustock does not implement and no sample block exercises. No genesis: mainnet's is built in.",
   "live_args": [
     "--network-id",
     "33",
@@ -188,5 +188,5 @@
     "{to}"
   ],
   "_live_doc": "live_args (bin/live-arm.sh): the replay flags without --import-blocks, serving RPC on 4444 for k6, with the ten cow keys from conf/rustock-wallet.keys ({wallet}, the fork's regtest-wallet.example.keys) so eth_sendTransaction signs for the accounts the genesis funds, the account rate limiter off as in RSKj's rsk.conf, the evm_* namespace for evm_startMining, timed mining at a 10 s median like RSKj's TimedMinerClient (--mine-timed, adapter harness/timed-mining) with nonce 0 under --skip-pow-validation, the trie flushed every {flush} mined blocks and the mined-block breakdown line (adapter harness/mined-block-timing) in {breakdown}. export_args (adapter harness/export-blocks) writes blocks {from}..{to} in RSKj's ExportBlocks format to {file} for the cross replay, on a stopped data dir. The adapter branches are being written: --mine-timed, --flush-every and the --export-* flags may land under other names, and live-arm.sh reads whatever is here. mainnet_* are the same on top of mainnet_import_args.",
-  "_mainnet_args_doc": "mainnet_*_args: the same regtest configuration as *_args on the converted mainnet seed, whose trie lives in the single RocksDB backend. The seed runs as regtest (chain id 33, conf/genesis_25M.json, every hardfork at genesis): that is how RSKj mines on it in perf-lab (--regtest plus node.props), so the sample's transactions carry chain id 33. Verified 2026-10-27: 204 blocks of mainnet-sim@mainnet imported with the reference hashes."
+  "_mainnet_args_doc": "mainnet_*_args: the same regtest configuration as *_args on the converted mainnet seed, whose trie lives in the single RocksDB backend. The seed runs as regtest (chain id 33, conf/genesis_25M.json, every hardfork at genesis): that is how RSKj mines on it (--regtest plus node.props), so the sample's transactions carry chain id 33. Verified 2026-10-27: 204 blocks of mainnet-sim@mainnet imported with the reference hashes."
 }

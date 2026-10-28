@@ -1,0 +1,16 @@
+rules:
+  # RocksDB Statistics
+  - pattern: "org.rocksdb<type=(.+), name=(.+)><>(.+):"
+    name: rocksdb_$1_$3
+    labels:
+      database: "$2"
+
+  # Per-block execution/persistence timing breakdown -- same figures logged to
+  # block-breakdown.log by BlockChainImpl/BlockExecutor (see
+  # bench/deterministic-replay/README.md), gauges reflecting the most recently
+  # connected block. co.rsk.metrics.BlockProcessingStats.
+  - pattern: "co.rsk.metrics<type=BlockProcessingStats><>(.+):"
+    name: rsk_block_$1
+
+  # Default rule for everything else
+  - pattern: ".*"

@@ -68,7 +68,7 @@ ARGS_KEY=import_args; RUSTOCK_DB=/data/db
 T0=$(date +%s)
 case "$CLIENT" in
 rskj)
-  # The flags perf-lab's replay passes (bin/replay.sh in rsk-perf-lab), minus its JMX agent.
+  # The flags an RSKj replay benchmark passes, without a JMX agent.
   docker run --rm --name clientslab-replay "${LIMITS[@]}" \
     "${DATA[@]}" -v "$BVOL":/blocks:ro -v "$ART":/opt/rsk.jar:ro -v "$LAB/conf":/conf:ro \
     -w /data "$(cfg .docker.rskj_image)" \

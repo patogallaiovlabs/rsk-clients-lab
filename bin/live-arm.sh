@@ -6,12 +6,12 @@
 #   bin/live-arm.sh rskj    <jar>       <scenario> <out-dir>
 #   bin/live-arm.sh rustock <image:tag> <scenario> <out-dir>
 #
-# RSKj runs as perf-lab's live arms do (bin/live-arm-mainnet.sh there): the perflab-runtime
-# image's entrypoint with IS_MINER=true, timed mining at a 10 s median, the lab's rsk.conf
+# RSKj runs through the runtime image's entrypoint (docker/runtime/Dockerfile) with
+# IS_MINER=true, timed mining at a 10 s median, the lab's rsk.conf
 # and logback, genesis_25M.json, a flush every 10 blocks, the account rate limiter off, RPC
 # on 4444. rustock runs clients/rustock.json live_args (mainnet_live_args on the seed) and
 # is told evm_startMining once RPC answers; RSKj mines by itself. k6 runs on the host from
-# the rskj-k6-tests checkout (config.json mainnet_seed.k6), the scenario's k6_option.
+# the k6 suite (config.json mainnet_seed.k6), the scenario's k6_option.
 #
 # Same container limits for both (config.json live.cpus, live.memory, live.mainnet_memory).
 # One node at a time: without CLIENTSLAB_DOCKER_LOCK_HELD the arm takes the shared Docker
@@ -79,8 +79,8 @@ rustock)
 *) echo "unknown client $CLIENT" >&2; exit 1 ;;
 esac
 
-# rskj_tool <class> <opts> [docker run flags...]: the runtime image's entrypoint with the
-# flags of perf-lab's live arms (bin/live-arm-mainnet.sh); IS_MINER=true adds the timed
+# rskj_tool <class> <opts> [docker run flags...]: the runtime image's entrypoint;
+# IS_MINER=true adds the timed
 # miner at a 10 s median, the coinbase from miner.coinbase.secret=miner1.
 rskj_tool() {
   local cls="$1" opts="$2"; shift 2
@@ -124,12 +124,12 @@ if [ "$CLIENT" = rustock ]; then
   log "evm_startMining: $MINING"
 fi
 
-# k6 on the host, as perf-lab's local-ab.sh starts it. Option 7 sizes its phases to
+# k6 on the host. Option 7 sizes its phases to
 # DURATION; option 14 runs for an hour of its own and is stopped with the arm.
 ( cd "$K6" && RPC_URL="http://localhost:$PORT" DURATION="${MIN}m" nohup ./infinite.sh "$OPT" > "$OUT/k6.log" 2>&1 < /dev/null & )
 sleep 20
 # The load must really be running: a missing node or npm leaves infinite.sh looping on
-# errors while the node mines empty blocks (perf-lab, 2026-10-23).
+# errors while the node mines empty blocks (seen 2026-10-23).
 if grep -qE "No such file or directory|command not found|Cannot find module" "$OUT/k6.log"; then
   log "the k6 load cannot start: $(grep -m1 -E 'No such file|not found|Cannot find' "$OUT/k6.log")"; exit 1
 fi

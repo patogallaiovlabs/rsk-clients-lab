@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 # Swap a Boton box's mainnet seed for rustock's (docs/mainnet-db-plan.md, sequential design):
-# remove perf-lab's RSKj seed and its clones from the box's data volume, then copy the
-# compacted rustock seed (Docker volume perflab-mainnet, /rustock-seed, about 148 GB) to
-# /var/lib/rsk/rustock-seed. Afterwards perf-lab's 6-boton mainnet stage needs the RSKj seed
-# uploaded again (rsk-perf-lab/bin/boton-seed-upload.sh) before it can run on that box.
+# remove the RSKj seed and its clones from the box's data volume, then copy the compacted
+# rustock seed (config.json mainnet_seed.volume, /rustock-seed, about 148 GB) to
+# /var/lib/rsk/rustock-seed. The box then has no RSKj seed until one is uploaded again.
 #
 #   bin/boton-rustock-seed.sh <A|B>
 #   -> state/logs/rustock-seed-<box>.log; /var/lib/rsk/rustock-seed/, READY beside it
 #
-# The copy is rsync with --partial (resumable) under the box's lock at priority 2, as
-# perf-lab's upload does; it hands the box over when a more urgent waiter appears.
+# The copy is rsync with --partial (resumable) under the box's lock at priority 2; it hands
+# the box over when a more urgent waiter appears.
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 BOX="${1:?usage: boton-rustock-seed.sh <A|B>}"; H=$(box_host "$BOX")
