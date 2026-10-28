@@ -1,0 +1,13 @@
+{
+ "where": "boton",
+ "scenario": "ecdsa@mainnet",
+ "cycles": 0,
+ "verdict": "no data",
+ "why": "no complete cycles",
+ "totalMs": {},
+ "phases": {},
+ "absolute_ms": {
+  "rskj": {},
+  "rustock": {}
+ }
+}
