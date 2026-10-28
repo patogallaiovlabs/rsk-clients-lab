@@ -91,3 +91,18 @@ With the regtest configuration of the small chain (`--network-id 33`, `conf/gene
 blocks of `mainnet-sim@mainnet` with the reference hashes in 12 s. `clients/rustock.json`'s
 `mainnet_*_args` are now that configuration; `harness/mainnet-overrides` stays in the harness
 but this comparison does not use it.
+
+## Boton (2026-10-28)
+
+The boxes have 2 CPUs and 7 GB of RAM; their data volume (`/var/lib/rsk`, 295 GB) held
+perf-lab's RSKj seed (`mainnet-seed/seed`, 186 GB) and perf-lab's clone of it (`database`).
+`bin/boton-campaign.sh` now runs the listed clients only and, on the mainnet DB, starts each
+run from a hard-link clone of the seed made on that volume (`/var/lib/rsk/clientslab-db`;
+links do not cross file systems, and the run directory is on the root disk). Campaign
+`2026-10-27-c3` ran RSKj's 24 runs first, all with the reference hashes: mainnet-sim about
+75 ms/block on box A and 110 on box B, ecdsa 386 and 541 (box B is the slower box, as perf-lab
+measured). Then `bin/boton-rustock-seed.sh` removed the RSKj seed and its clones from both
+boxes and copied rustock's compacted seed (148 GB) to `/var/lib/rsk/rustock-seed`, at about
+5 MB/s per box over the shared uplink; rustock's half of the campaign runs when both copies
+are done. perf-lab's `6-boton` mainnet stage needs the RSKj seed uploaded again before it can
+run (`rsk-perf-lab/bin/boton-seed-upload.sh`, most of a day per box).
