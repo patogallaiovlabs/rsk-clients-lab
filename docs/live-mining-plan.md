@@ -354,3 +354,15 @@ The RPC latency seen in c3 was the refused sends: with 500 account slots, k6's
 Open from this campaign: rustock's `onBestBlockMs` still reads 0.1 ms against RSKj's 0.0
 (both negligible on this path), and `initialValidationMs` is 6.8 ms in RSKj against 0.1 in
 rustock, the one phase besides execution with a visible difference.
+
+### Mainnet seed (2026-10-28-c5): blocked on the RSKj seed
+
+`2026-10-28-c5` (live ecdsa on the mainnet seed) failed in its first arm with "no seed in
+volume perflab-mainnet": this Mac's copy of perf-lab's RSKj seed was deleted on 2026-10-28
+to make room for rustock's seed compaction (`docs/mainnet-db-plan.md`), and the boxes' copies
+went the same way. Only `rustock-seed` (148 GB) is in the volume. Rebuilding needs the
+source tarball on the external disk "Backup 1" (not attached) and perf-lab's
+`database-seed/prepare.sh extract` then `bootstrap`; a rebuild now funds the senders from
+the bridge instead of minting, so its tip and state differ from the seed rustock's was
+converted from, and rustock's seed would have to be converted again for the two to be the
+same chain. Live mining on the mainnet seed waits on that decision.
