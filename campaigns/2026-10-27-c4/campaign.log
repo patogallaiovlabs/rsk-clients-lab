@@ -1,0 +1,5 @@
+[2026-10-28T02:44:47Z] rskj e507f4503, rustock ecbacadcf
+[2026-10-28T02:55:21Z] live ecdsa c1-rskj: blocks 1..48 in 632 s
+[2026-10-28T03:07:49Z] live ecdsa c1-rustock: blocks 1..42 in 747 s
+[2026-10-28T03:07:58Z] live ecdsa c1-rskj: 48 blocks mined, 27 qualifying, k6 100.0%, cross replay ok
+[2026-10-28T03:07:58Z] consensus failure: rustock ecdsa c1-rustock cross replay: {'consensus_ok': False, 'records': 0, 'expected': 42, 'first_difference': '< 1 c48a772d737178933f28bef0b058f653e103f5a6bc2b39e860b2fccce93e6d2e', 'wall_s': 1, 'client': 'rskj', 'artifact': '/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar'}

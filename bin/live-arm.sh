@@ -28,7 +28,7 @@ S=".scenarios.\"$SCEN\""
 [ "$(cfg "$S")" != null ] || { echo "live-arm: unknown scenario '$SCEN'" >&2; exit 1; }
 OPT=$(cfg "$S.k6_option"); [ "$OPT" != null ] || { echo "live-arm: scenario '$SCEN' has no k6_option" >&2; exit 1; }
 DB=$(cfg "$S.db"); [ "$DB" = null ] && DB=empty
-MIN=$(cfg .live.arm_minutes); GAS=$(cfg .chain.gas_limit); FLUSH=$(cfg .chain.flush_every_blocks)
+MIN="${CLIENTSLAB_ARM_MINUTES:-$(cfg .live.arm_minutes)}"; GAS=$(cfg .chain.gas_limit); FLUSH=$(cfg .chain.flush_every_blocks)
 PORT=$(cfg .live.rpc_port); HEAP=$(cfg .docker.jvm_heap)
 MEM=$(cfg .live.memory); [ "$DB" = mainnet ] && MEM=$(cfg .live.mainnet_memory)
 LIMITS=(--cpus "$(cfg .live.cpus)" --memory "$MEM" --memory-swap "$MEM")
@@ -113,7 +113,9 @@ for i in $(seq 1 360); do
   sleep 5
 done
 H0=$(height) || { log "RPC never came up"; exit 1; }
-[ "$H0" = "$START" ] || { log "node opened at #$H0, expected #$START"; exit 1; }
+# RSKj mines by itself and can have a block before RPC answers; a few blocks above the start
+# are its own (the breakdown log holds them), more means the wrong database.
+[ "$H0" -ge "$START" ] && [ "$H0" -le $((START + 3)) ] || { log "node opened at #$H0, expected #$START"; exit 1; }
 MINING=""
 if [ "$CLIENT" = rustock ]; then
   # RSKj mines by itself. rustock's miner is started over RPC; harmless if --mine-timed
