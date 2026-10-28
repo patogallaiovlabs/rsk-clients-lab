@@ -1,13 +1,117 @@
 {
  "where": "boton",
  "scenario": "mainnet-sim@mainnet",
- "cycles": 0,
- "verdict": "no data",
- "why": "no complete cycles",
- "totalMs": {},
- "phases": {},
+ "cycles": 6,
+ "verdict": "extend",
+ "why": "rustock faster in 1/6 cycles, median +4.65%, sign-test p=0.21875",
+ "totalMs": {
+  "tmean": {
+   "median_pct": 4.65,
+   "rustock_faster": 1,
+   "n": 6,
+   "p": 0.21875,
+   "deltas_pct": [
+    -2.15,
+    8.23,
+    3.95,
+    7.1,
+    5.34,
+    3.31
+   ]
+  },
+  "mean": {
+   "median_pct": -9.14,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -15.77,
+    -6.32,
+    -6.21,
+    -9.31,
+    -9.4,
+    -8.98
+   ]
+  },
+  "median": {
+   "median_pct": 12.36,
+   "rustock_faster": 0,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    3.25,
+    15.58,
+    11.38,
+    17.85,
+    13.35,
+    10.16
+   ]
+  }
+ },
+ "phases": {
+  "executeMs": {
+   "median_pct": 99.09,
+   "rustock_faster": 0,
+   "n": 6,
+   "p": 0.03125
+  },
+  "initialValidationMs": {
+   "median_pct": -85.17,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "postExecuteValidationMs": {
+   "median_pct": -98.34,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "preambleMs": {
+   "median_pct": -100.0,
+   "rustock_faster": 5,
+   "n": 5,
+   "p": 0.0625
+  },
+  "saveReceiptsMs": {
+   "median_pct": 9.3,
+   "rustock_faster": 3,
+   "n": 6,
+   "p": 1.0
+  },
+  "switchChainMs": {
+   "median_pct": -52.68,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  }
+ },
  "absolute_ms": {
-  "rskj": {},
-  "rustock": {}
+  "rskj": {
+   "executeMs": 43.424,
+   "initialValidationMs": 24.078,
+   "onBestBlockMs": 0.0,
+   "onBlockMs": 0.0,
+   "postExecuteValidationMs": 0.347,
+   "preambleMs": 0.789,
+   "processBestMs": 0.0,
+   "saveReceiptsMs": 4.18,
+   "statePersistMs": 12.88,
+   "stateRootRegisterMs": 0.0,
+   "switchChainMs": 5.35,
+   "totalMs": 94.236,
+   "txExecutionMs": 29.029
+  },
+  "rustock": {
+   "executeMs": 86.189,
+   "initialValidationMs": 3.571,
+   "onBestBlockMs": 0.001,
+   "postExecuteValidationMs": 0.001,
+   "preambleMs": 0.0,
+   "saveReceiptsMs": 4.182,
+   "switchChainMs": 2.488,
+   "totalMs": 97.98,
+   "trieSaveMs": 14.837
+  }
  }
 }

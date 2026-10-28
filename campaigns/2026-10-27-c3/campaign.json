@@ -13,7 +13,7 @@
   "ecdsa@mainnet"
  ],
  "clients": [
-  "rskj"
+  "rustock"
  ],
  "cycles": 6,
  "max_cycles": 12,
@@ -24,22 +24,22 @@
  "note": "Mainnet DB on Boton, sequential design (docs/mainnet-db-plan.md): RSKj's cycles first on hard-link clones of the seed staged by perf-lab (/var/lib/rsk/mainnet-seed, tip #9,003,579), run as regtest with node.props, 2 CPUs and 7 GB RAM per box, JVM -Xms2G -Xmx4G, maxOpenFiles 1000. rustock's cycles come after the boxes' seed is swapped for rustock's compacted seed.",
  "results": {
   "boton/mainnet-sim@mainnet": {
-   "verdict": "no data",
-   "why": "no complete cycles"
+   "verdict": "extend",
+   "why": "rustock faster in 1/6 cycles, median +4.65%, sign-test p=0.21875"
   },
   "boton/ecdsa@mainnet": {
-   "verdict": "no data",
-   "why": "no complete cycles"
+   "verdict": "rustock faster",
+   "why": "rustock faster in 6/6 cycles, median -60.75%, sign-test p=0.03125"
   }
  },
- "started_at": "2026-10-28T01:33:14Z",
+ "started_at": "2026-10-28T10:45:19Z",
  "shas": {
   "rskj": "e507f45031cf0e8a71bf571fcdbfbe9aa529a21b",
-  "rustock": "ecbacadcf1eddcf3e2583bf02ad672256aff646a"
+  "rustock": "428086b40d4c09b82add942126079ac602dc8f7a"
  },
  "builds": {
   "rskj": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar",
-  "rustock-boton": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rustock-ecbacadcf1eddcf3e2583bf02ad672256aff646a-linux-amd64"
+  "rustock-boton": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rustock-428086b40d4c09b82add942126079ac602dc8f7a-linux-amd64"
  },
  "settings": {
   "config": {
@@ -352,5 +352,5 @@
    "_mainnet_args_doc": "mainnet_*_args: the same regtest configuration as *_args on the converted mainnet seed, whose trie lives in the single RocksDB backend. The seed runs as regtest (chain id 33, conf/genesis_25M.json, every hardfork at genesis): that is how RSKj mines on it in perf-lab (--regtest plus node.props), so the sample's transactions carry chain id 33. Verified 2026-10-27: 204 blocks of mainnet-sim@mainnet imported with the reference hashes."
   }
  },
- "finished_at": "2026-10-28T02:26:39Z"
+ "finished_at": "2026-10-28T11:03:30Z"
 }

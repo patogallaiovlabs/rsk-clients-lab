@@ -117,3 +117,11 @@ exceeds anyway). `bin/boton-campaign.sh` now runs every box command under `ulimi
 `database.rocksdb.maxOpenFiles=1000`. The failed attempt is kept in
 `state/logs/c3-rustock-ulimit-failure.txt`; the campaign was rerun with `lab.py run
 2026-10-27-c3 --clients rustock`.
+
+Result (`campaigns/2026-10-27-c3/report.md`, 6 cycles, both halves consensus-clean):
+mainnet-sim 94.2 vs 98.0 ms/block (rustock 1.05x slower on the trimmed mean, 1/6 cycles;
+the mean says 1.10x faster 6/6 and the median 1.12x slower 0/6, so the verdict is
+"extend"); ecdsa 463.9 vs 182.5 ms/block (rustock 2.55x faster, 6/6). As on the Mac:
+rustock's executeMs is about twice RSKj's on mainnet-sim (86 vs 43 ms) and its
+initialValidationMs a sixth (3.6 vs 24 ms); the two nearly cancel on the boxes. The halves
+ran hours apart (RSKj 2026-10-28 01:40Z, rustock 10:45Z) on the same boxes.

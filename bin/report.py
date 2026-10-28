@@ -22,6 +22,10 @@ def ratio(delta_pct, short=False):
     Percent is lopsided (faster is capped at -100%, slower is unbounded), so it makes two
     gaps of the same size look different."""
     r = 1 + delta_pct / 100
+    if r <= 0:
+        # -100%: rustock reports 0 ms for the phase (onBestBlockMs on the mined and
+        # replay paths), so there is no ratio to give.
+        return "rustock 0 ms" if short else "rustock reports 0 ms for it"
     if short:
         return f"{1 / r:.2f}x faster" if r < 1 else f"{r:.2f}x slower"
     return f"rustock {1 / r:.2f}x faster than RSKj" if r < 1 else f"rustock {r:.2f}x slower than RSKj"
