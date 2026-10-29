@@ -490,3 +490,27 @@ as its comment says. A mainnet-sim sample mined with this suite is a heavier blo
 earlier ones, with real storage writes in the ERC-20 share, and is not comparable to the
 earlier mainnet-sim numbers. The rerun of this campaign is the first measurement of the
 scenario as described.
+
+### mainnet-sim live (2026-10-29-c3): rustock's blocks are 60% full
+
+With the ERC-20 fixed, both arms of cycle 1 deployed the three contracts at the same gas
+estimates and k6 held 100% on both. RSKj's arm counted (114 blocks, 96 qualifying, 166
+transactions and 24.7 M gas per block). rustock's arm was discarded: 115 blocks, 78
+transactions and 12.6 M gas per block, none at 90% of the limit, with k6 reporting 100
+pending transactions per account throughout, its own ceiling, so the load was there and
+rustock did not take it.
+
+The cause is the miner's packing rule. rustock's template adds each candidate's declared
+gas limit and stops at 25 M; RSKj executes candidates as it packs and charges only the gas
+they use. k6 option 14 declares 21,000, 100,000, 300,000 and 1,500,000 per transaction type
+and uses about 60% of that, so RSKj's blocks carry 40 to 43 M of declared gas and rustock's
+exactly 25 M. Option 7 declares close to what it uses, which is why the ecdsa live campaigns
+never showed it. Written up for upstream in
+`docs/issues/rustock-miner-packs-by-gas-limit.md`.
+
+This is block production, not a harness setting, and the arms cannot be made comparable by
+loosening the qualifying threshold: a 60% block is a different workload. Tightening k6's
+declared limits would hide the difference rather than measure it, and could not fit both the
+transfers that succeed and the ones that revert. mainnet-sim live on rustock waits for the
+miner fix; the replay comparison on mainnet-sim is unaffected, since replay imports RSKj's
+blocks. The ERC-20 fix stands and applies to the next re-mining of the mainnet-sim samples.
