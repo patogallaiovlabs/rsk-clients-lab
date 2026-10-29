@@ -365,3 +365,57 @@ then `bootstrap`; a rebuild now funds the senders from
 the bridge instead of minting, so its tip and state differ from the seed rustock's was
 converted from, and rustock's seed would have to be converted again for the two to be the
 same chain. Live mining on the mainnet seed waits on that decision.
+
+### Mainnet seed (2026-10-28-c6): rustock mines blocks RSKj rejects
+
+Both seeds were rebuilt on 2026-10-28 (`docs/mainnet-db-plan.md`): the RSKj seed with
+`bin/seed.sh extract` and `bootstrap` (tip #9003567, the 15 senders funded from the bridge),
+rustock's converted from it. `2026-10-28-c6` (live ecdsa on that seed, rustock 1909b1c, 10g
+memory) ran its first cycle: RSKj's arm counted (131 blocks, 113 qualifying, k6 100%, cross
+replay ok); rustock's arm mined 138 blocks, k6 100%, 119 qualifying, and RSKj rejected the
+first of them, #9003569, as an invalid block:
+
+```
+Tx gas price=26065600 is above the cap. Block=448584413f...
+```
+
+The cap is RSKIP252 (`BlockTxsMaxGasPriceRule`): no transaction in a block may pay more than
+100 times the block's `minimumGasPrice`. The block's minimum was 587 wei; the transaction
+paid 26,065,600 wei, 44,000 times that. Two differences between the clients produced it, and
+the seed is what exposed them.
+
+1. **rustock's miner does not apply the cap.** `select_transactions` in
+   `crates/execution/src/mining/template.rs` drops transactions under the minimum and nothing
+   else. RSKj's `MinerUtils` drops the ones over the cap too (`isHighGasPriced`). rustock has
+   the import-side rule (`crates/core/src/validation/block_rules.rs`, which would reject this
+   block coming from a peer) but does not run it on the blocks it seals. This is the
+   consensus finding: rustock produced 138 blocks that the network's validators refuse.
+2. **rustock's `eth_gasPrice` ignores the fee-market gate.** Both clients prime a
+   `GasPriceTracker` from the database (the 25th percentile of the last 512 transactions,
+   floored at 1.1 times the head's minimum). RSKj only answers with it when
+   `isFeeMarketWorking()` (the last 50 blocks at least 90% full on average); otherwise
+   `eth_gasPrice` is the head's minimum times 1.1 (`EthereumImpl.getGasPrice`). rustock's
+   `eth_gas_price` returns the tracker's answer unconditionally. The seed's last 512
+   transactions are mainnet's, paying about 26 M wei when the minimum was 23.7 M; the
+   bootstrap then walked the minimum down to 587 over its 1060 blocks. So k6 priced its
+   transactions at 645 wei on RSKj and 26,065,600 wei on rustock, the same call on each.
+   Not a consensus rule, but it is what fed the miner transactions over the cap.
+
+On mainnet itself neither shows: the minimum sits near the market price and the cap is 100
+times away. The lab's seed has a minimum 40,000 times under the history's prices, and the
+one client that steers `eth_gasPrice` by that history, with a miner that does not check the
+cap, mines invalid blocks. The old seed (c4 and before) had minimum 0, where the cap does
+not apply at all.
+
+A third asymmetry, harmless here but worth a setting: RSKj's miner steers `minimumGasPrice`
+toward `miner.minGasPrice` (0 by default) one percent per block, 582 down to 193 over the
+arm; rustock's template keeps the parent's (587 throughout) because its
+`min_gas_price_target` is unset.
+
+Per-arm figures from the cycle, for the record only (the rustock arm does not count): RSKj
+131 blocks in 1847 s, rustock 138 blocks in 1947 s; both arms gas used 3.2 billion.
+
+Both fixes belong to the client, not the harness: the miner's cap is block production, the
+RPC gate is node behaviour. Either reported upstream, or the lab pins k6's gas price to the
+head's minimum times 1.1 on both arms (the same rule RSKj applies, applied by the harness)
+and runs the comparison while the findings stand. That choice is the user's.

@@ -86,7 +86,7 @@
   "mainnet_seed": {
     "_doc": "The mainnet seed (database-seed/, the rsk-database-seed tooling): RSKj's seed at /seed in the volume, rustock's converted seed at /rustock_seed; runs use hard-link clones in the same volume. seed_tooling is the submodule prepare.sh and clone.sh live in (seeds/mainnet/{meta.json,node.props} describe the seed); k6 is the rskj-k6-tests submodule live arms drive the node with (bin/live-arm.sh); runtime_image is built from docker/runtime/Dockerfile.",
     "seed_tooling": "database-seed",
-    "volume": "perflab-mainnet",
+    "volume": "clientslab-mainnet",
     "runtime_image": "clientslab-runtime:1",
     "rustock_seed": "rustock-seed",
     "k6": "k6-tests"

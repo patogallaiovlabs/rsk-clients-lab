@@ -146,3 +146,10 @@ Mac. Decided, with the user:
    and must be mined again on the new one before any further replay campaign on the
    mainnet DB; live mining does not need them. The Boton boxes still hold the old rustock
    seed.
+
+Status 2026-10-29: step 1 done. The RSKj seed was rebuilt (tip #9003567, `database-seed/seeds/mainnet/meta.json`),
+parked on Backup 1 while rustock imported it (3062 s, then 54 s of in-memory metadata), and
+restored; both seeds are in the volume `clientslab-mainnet` (renamed from `perflab-mainnet`;
+`/seed` 185 GB, `/rustock-seed` 149 GB) and the parked copy is gone. The live campaign that
+followed is `2026-10-28-c6` (`docs/live-mining-plan.md`). Step 2 (compaction inside the
+import) is still open.
