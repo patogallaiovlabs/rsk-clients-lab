@@ -455,3 +455,38 @@ starting another cycle.
 
 Next: `2026-10-29-c2`, mainnet-sim under k6 option 14 on the same seed, the first live run
 of that scenario.
+
+### mainnet-sim live (2026-10-29-c2): the suite's ERC-20 bytecode was never a contract
+
+The first live run of mainnet-sim (k6 option 14) on the mainnet seed stopped after one cycle.
+RSKj's arm counted (125 blocks, 107 qualifying, k6 100%). rustock's arm mined 107 empty
+blocks: k6's setup failed on rustock at the first step, the ERC-20 deployment, with
+`Invalid data` from `eth_sendTransaction`, and never sent a transaction.
+
+The cause is in the k6 suite. `utils/contracts/erc20.js` held an `ERC20_BYTECODE` of 2513 hex
+digits, an odd number, so it was never a byte string. The two clients disagree on what to do
+with it:
+
+- RSKj's `HexUtils.stringHexToByteArray` left-pads a zero nibble and goes on. The init code
+  then starts with `06 08 06 04 ...`, a `MOD` on an empty stack, so the deployment fails after
+  burning everything it was given: `eth_estimateGas` answered the whole block gas limit, the
+  suite capped it at 22.5 M and sent it, and the receipt carried a contract address with no
+  code behind it. Every `erc20_transfer` and `erc20_approve` of the scenario since then has
+  been a call to an empty account, which succeeds and costs 21,000 gas plus calldata.
+- rustock's `parse_hex` refuses the odd string, as the JSON-RPC spec reads. Its
+  `eth_estimateGas` on the same object answered 53,000 instead of an error, which is worth a
+  line upstream.
+
+So mainnet-sim's "ERC-20" share has been inert in every sample the suite ever mined, on this
+lab and on perf-lab, whose `repos/rskj-k6-tests` carries the same constant. The deployment
+transaction itself, 22.5 M gas of failed execution in block 2 of each sample, is inside the
+first 20 blocks that every analysis drops.
+
+Fixed in the k6 fork (57c00ac): `ERC20_BYTECODE` is now `contracts/ERC20.sol` compiled as its
+header says, solc 0.8.17 with the optimizer at 200 runs, 1907 bytes. The source pre-mints to
+the deployer and reverts transfers from empty balances, so under the scenario nine of ten
+senders' transfers revert at the EVM and the tenth's succeed; k6 counts both as RPC success,
+as its comment says. A mainnet-sim sample mined with this suite is a heavier block than the
+earlier ones, with real storage writes in the ERC-20 share, and is not comparable to the
+earlier mainnet-sim numbers. The rerun of this campaign is the first measurement of the
+scenario as described.
