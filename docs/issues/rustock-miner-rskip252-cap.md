@@ -41,3 +41,8 @@ Drop, in `select_transactions`, every transaction whose gas price exceeds the mi
 `validate_block_rules` on the sealed block before announcing it, so the miner cannot produce
 what the importer refuses. A test: a pending transaction at 101 times the template's
 minimum is left out, one at 100 times is included.
+
+rskj has this test already: `MinerUtilsTest.filterTransactions_whenRskip252EnabledThenTxWithMoreGasPriceThanCapExcluded`
+(with its `...Disabled...` twin). rustock ported the import rule and its test
+(`block_txs_max_gas_price_enforces_the_100x_cap_from_rskip252`) but not the miner's; porting
+that test is the natural start.

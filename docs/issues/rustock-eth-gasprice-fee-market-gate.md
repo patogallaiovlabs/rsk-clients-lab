@@ -39,3 +39,8 @@ In `eth_gas_price`: if the tracker says the fee market is not working, answer th
 1.1), else the tracker's price, as rskj does. A test: with a primed tracker whose block
 window is under 90% full, `eth_gasPrice` equals the head minimum times 1.1 and not the
 percentile.
+
+rskj has this test already: `EthereumImplTest.getGasPrice_returns_correctedBestBlockValue_when_feeMarketWorking_is_false`
+(with its `..._true` twin). rustock's `test_eth_gas_price_uses_the_tracker` and
+`test_eth_gas_price_falls_back_to_the_block_minimum` cover a tracker present or absent, never
+the fee-market flag; porting rskj's pair is the natural start.
