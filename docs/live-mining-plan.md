@@ -1,9 +1,14 @@
 # Plan: live mining under k6 load, RSKj vs rustock
 
-Status: proposed 2026-10-27, nothing built. Everything below was read in the code at rustock
-`clients-lab/comparison` (8eb2285, on Lerner's 43dc5e5), RSKj's integration branch, the k6
-suite (`k6-tests/`) and the live scripts that preceded the lab's. Where a claim is an
-inference rather than something read, the text says so.
+Status: built and in use since 2026-10-28. Sections 1 to 6 are the design as proposed on
+2026-10-27, read in the code at rustock `clients-lab/comparison` (8eb2285, on Lerner's
+43dc5e5), RSKj's integration branch, the k6 suite (`k6-tests/`) and the live scripts that
+preceded the lab's; where a claim is an inference rather than something read, the text says
+so. The sections after them record what the runs found, latest last. What the design
+settled on: the adapter branches `harness/timed-mining`, `harness/mined-block-timing`,
+`harness/export-blocks`, `harness/mined-header-version` and `harness/account-slots`, all on
+`clients-lab/harness`; 2 CPUs per container; no Boton live slot; and, since 2026-10-29, k6
+pricing by the head minimum times 1.1 on both arms rather than by each node's `eth_gasPrice`.
 
 The replay campaigns feed both clients the same blocks. A live campaign has each client mine
 its own blocks under the same k6 load, as RSKj's own live A/B benchmarks do. The statistic

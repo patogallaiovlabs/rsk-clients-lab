@@ -89,10 +89,15 @@ timing line and block export (`docs/live-mining-plan.md`). The hash gate becomes
 own blocks, the k6 success rate held, and at least 20 blocks were at least 90% full after the
 first 20. The statistic and the verdict are the ones above; `report.md` adds a per-arm table
 with blocks mined, qualifying blocks, transactions, k6 success rate and the cross-replay
-result, since the two arms of a cycle mine different blocks. Boton live slots are a later step.
+result, since the two arms of a cycle mine different blocks. k6 prices every transaction at
+the head block's `minimumGasPrice` times 1.1 on both arms (`live.k6_gas_price`), the rule
+RSKj's own `eth_gasPrice` applies, so the two nodes' gas price answers do not shape the load.
+There is no Boton live slot; live campaigns run on this Mac only.
 
-Out of scope, because rustock cannot do it yet: the mainnet database (it cannot read RSKj's;
-`docs/mainnet-db-plan.md` converts a copy).
+The mainnet seed (`docs/mainnet-db-plan.md`): an RSKj mainnet database with the k6 senders
+funded, in the Docker volume `config.json` names, and rustock's conversion of it beside it.
+Replay and live runs on it start from a hard-link clone of the right seed; the `@mainnet`
+scenarios use it.
 
 ## How a campaign moves
 
@@ -157,16 +162,20 @@ cycles run on this Mac only.
 ## The rustock adapter
 
 rustock needs small harness-only changes to be measured, each proposed upstream as a pull
-request to the SergioDemianLerner fork from a branch in `clients/rustock`:
+request to the SergioDemianLerner fork from a `harness/<topic>` branch in `clients/rustock`,
+with its text in `docs/prs/`: a regtest chain from a genesis file with RSKj's activation
+heights and REMASC constants; `import-blocks --file` through the same validation and
+execution path as sync; the per-block timing line, on the import and the mined path; a
+multi-arch Dockerfile and the linux/amd64 build for Boton; and, for live mining, a timed
+miner with RSKj's schedule, block export in RSKj's format, versioned mined headers and the
+`--account-slots` setting. Activation overrides on a mainnet-derived chain
+(`harness/mainnet-overrides`) exist but the mainnet seed runs as regtest and does not use
+them.
 
-1. a regtest chain from a genesis file with RSKj's activation heights and REMASC constants;
-2. `import-blocks --file`, through the same validation and execution path as sync;
-3. the per-block timing line;
-4. a multi-arch Dockerfile and the linux/amd64 build for Boton.
-
-Until they merge, `clients-lab/harness` holds the merge of all four. The lab builds
+Until they merge, `clients-lab/harness` holds the merge of all of them. The lab builds
 `clients-lab/comparison`, which tracks that merge and holds comparison-only instrumentation.
-Every report names the commit. No adapter change may touch what the client computes or how fast.
+Every report names the commit. No adapter change may touch what the client computes or how
+fast. Client bugs the lab finds are written up for upstream in `docs/issues/`, never patched.
 
 ## Layout
 
@@ -178,7 +187,7 @@ Every report names the commit. No adapter change may touch what the client compu
 | `docker/` | the rustock build image and the RSKj runtime image (`docker/runtime/Dockerfile`) |
 | `samples/<scenario>/` | block file (gitignored), reference hashes, `meta.json` with its sha256 |
 | `bin/` | `build-client.sh`, `replay-docker.sh`, `live-arm.sh`, `import-sample.sh`, `with-lock.sh`, stats and analyzer |
-| `docs/` | timing scope, adapter pull request descriptions |
+| `docs/` | timing scope, the mainnet seed and live mining plans with their results, adapter pull request texts (`prs/`), client bug reports for upstream (`issues/`) |
 | `campaigns/<date>-<id>/` | a campaign's report (raw data under `raw/`, not committed) |
 | `state/` | builds, runs, logs (gitignored) |
 

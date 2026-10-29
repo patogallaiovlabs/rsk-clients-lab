@@ -1,6 +1,8 @@
 # Plan: comparing the clients on the mainnet database
 
-Status: approved 2026-10-27; conversion on this Mac started the same day.
+Status: done. Approved 2026-10-27, the seeds converted and the campaigns run that week, both
+seeds rebuilt on 2026-10-28 (last section). The steps and decisions below are kept as the
+record of how it was done; the state of the seeds today is in the last section.
 
 Today both clients replay from an empty database, so every block touches a state of a few
 MB. On a real state (the mainnet seed, a 125 GB unitrie) the trie reads and writes
@@ -9,9 +11,10 @@ This plan brings rustock onto that seed.
 
 ## What exists
 
-- **The seed.** The seed volume (`config.json` `mainnet_seed.volume`), `/seed`: an RSKj mainnet database at tip
-  #9,003,579 (hash `0x471f0ffc…`), 186 GiB: unitrie 125 GB, blocks 36 GB, receipts 25 GB.
-  `database-seed/seeds/mainnet/{meta.json,node.props}` describe it. Runs use a
+- **The seed.** The seed volume (`config.json` `mainnet_seed.volume`), `/seed`: an RSKj
+  mainnet database, 185 GB: unitrie 125 GB, blocks 36 GB, receipts 25 GB. The tip was
+  #9,003,579 (hash `0x471f0ffc…`) in the first build and is #9,003,567 since the rebuild of
+  2026-10-28. `database-seed/seeds/mainnet/{meta.json,node.props}` describe it. Runs use a
   hard-link clone made in seconds (`bin/seed.sh clone`).
 - **Its activations are not mainnet's.** `node.props` schedules `reed810`, `tbd1000`,
   `rskip351` and `rskip535` at #9,002,504 (the funding block) and `rskip536` at #8,804,200,
@@ -22,7 +25,7 @@ This plan brings rustock onto that seed.
   `blocks/` into headers and bodies; `--metadata-in-memory` then rebuilds the canonical index
   in minutes. Receipts and blooms are not copied. About an hour on 9.2M blocks.
 
-## Steps
+## Steps (as planned on 2026-10-27; all done)
 
 1. **Disk.** A converted rustock seed is about 160 GB (trie 125 + blocks 36), beside the
    186 GiB RSKj seed. This Mac has 171 GB free; too tight with clones and run output.
