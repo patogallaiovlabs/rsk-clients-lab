@@ -82,7 +82,10 @@ def main(cid):
               "rustock's line comes from the adapter (`docs/live-mining-plan.md`, section 3).", "",
               f"Docker: both containers limited to {lv.get('cpus')} CPUs and {lv.get('memory')} memory "
               f"({lv.get('mainnet_memory')} on the mainnet seed); RSKj with `{dk.get('jvm_heap')}`, timed mining "
-              "at a 10 s median in both; k6 on the host.", ""]
+              "at a 10 s median in both; k6 on the host"
+              + (", pricing every transaction at the head block's minimumGasPrice times 1.1 on both arms "
+                 "(`live.k6_gas_price`)" if lv.get("k6_gas_price") == "head-minimum-x1.1" else "")
+              + ".", ""]
     else:
         mainnet = any(cfg.get("scenarios", {}).get(s, {}).get("db") == "mainnet" for s in c["scenarios"])
         start = ("a hard-link clone of the mainnet seed (`docs/mainnet-db-plan.md`)" if mainnet

@@ -108,6 +108,8 @@
       "7": 80
     },
     "rpc_port": 4444,
+    "k6_gas_price": "head-minimum-x1.1",
+    "k6_gas_price_doc": "GAS_PRICE_RULE for the k6 suite: 'head-minimum-x1.1' prices every transaction at the head block's minimumGasPrice times 1.1 on both arms (rskj's own eth_gasPrice rule while the fee market is not working); 'node' asks each client's eth_gasPrice. Pinned since 2026-10-28-c6: rustock's eth_gasPrice follows the seed's history and its miner does not apply the RSKIP252 cap (docs/live-mining-plan.md).",
     "mining_coinbase": "0x1111111111111111111111111111111111111111"
   }
 }

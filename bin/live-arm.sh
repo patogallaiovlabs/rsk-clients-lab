@@ -126,7 +126,9 @@ fi
 
 # k6 on the host. Option 7 sizes its phases to
 # DURATION; option 14 runs for an hour of its own and is stopped with the arm.
-( cd "$K6" && RPC_URL="http://localhost:$PORT" DURATION="${MIN}m" nohup ./infinite.sh "$OPT" > "$OUT/k6.log" 2>&1 < /dev/null & )
+# GAS_PRICE_RULE (config live.k6_gas_price): the same pricing rule on both arms.
+GPR=$(cfg .live.k6_gas_price); [ "$GPR" = null ] && GPR=node
+( cd "$K6" && RPC_URL="http://localhost:$PORT" DURATION="${MIN}m" GAS_PRICE_RULE="$GPR" nohup ./infinite.sh "$OPT" > "$OUT/k6.log" 2>&1 < /dev/null & )
 sleep 20
 # The load must really be running: a missing node or npm leaves infinite.sh looping on
 # errors while the node mines empty blocks (seen 2026-10-23).
