@@ -7,6 +7,40 @@ Compares the block processing time of two RSK clients on the same workloads:
 
 The lab measures. It does not optimize either client.
 
+## In one picture
+
+```mermaid
+flowchart LR
+    A["<b>1. Queue</b><br/>a campaign: scenarios,<br/>where, replay or live<br/><i>≈ 1 min</i>"]:::script
+    B["<b>2. Build</b><br/>both clients at<br/>their pinned commits<br/><i>≈ 5 to 20 min</i>"]:::script
+    C["<b>3. Run</b><br/>6 paired cycles, one<br/>client at a time on<br/>the same machine<br/><i>minutes to 7 h</i>"]:::script
+    D["<b>4. Check</b><br/>every block hash equals<br/>RSKj's; live: four checks<br/><i>seconds</i>"]:::check
+    E["<b>5. Judge</b><br/>trimmed mean per run,<br/>paired diff, sign test<br/><i>seconds</i>"]:::check
+    F(["<b>6. Report</b><br/>report.md, both commits,<br/>every non-default setting<br/>docs updated by an AI"]):::done
+    X(["<b>consensus finding</b><br/>first diverging block,<br/>written up for upstream"]):::dead
+    A --> B --> C --> D --> E --> F
+    D -. "a hash differs" .-> X
+    E -. "direction consistent,<br/>not yet significant" .-> C
+
+    classDef script fill:#fff5dc,stroke:#c99a2e,color:#4a3a10
+    classDef check  fill:#f3e8fd,stroke:#8a4fd1,color:#3b1a5e
+    classDef done   fill:#dff5e3,stroke:#3a9a55,color:#123d1f
+    classDef dead   fill:#fde3e3,stroke:#c94b4b,color:#5a1515
+```
+
+Scripts run the campaign and decide; an AI reads the result, explains it and writes it up.
+A replay campaign on the Mac takes minutes (the mainnet seed) to three hours (both
+scenarios from an empty database); a live campaign about seven hours. A campaign is kept only
+when both clients computed the same blocks: a different hash stops it, and the finding goes
+upstream before any speed is reported.
+
+```bash
+bin/lab.py queue --where docker --scenarios ecdsa,mainnet-sim     # a replay campaign
+bin/lab.py queue --kind live --scenarios ecdsa@mainnet --cycles 6  # a live one on the mainnet seed
+bin/start.sh                                                       # run the queue, detached
+bin/lab.py status [id]                                             # where it is
+```
+
 ## Method
 
 Each campaign replays the same blocks into both clients, one client at a time, from an empty
@@ -59,6 +93,66 @@ result, since the two arms of a cycle mine different blocks. Boton live slots ar
 
 Out of scope, because rustock cannot do it yet: the mainnet database (it cannot read RSKj's;
 `docs/mainnet-db-plan.md` converts a copy).
+
+## How a campaign moves
+
+```mermaid
+flowchart TD
+    Q["<b>queue</b><br/>lab.py queue · campaign.json<br/>refs from clients/*.json"]:::script
+    B["<b>build</b><br/>build-client.sh · RSKj jar, rustock image<br/>(linux/amd64 binary for Boton)<br/><i>≈ 5 to 20 min</i>"]:::script
+    Q --> B
+
+    subgraph REPLAY ["replay cycle · the same blocks into each client, order alternating"]
+        direction TB
+        R1["<b>run RSKj</b><br/>ConnectBlocks · empty DB<br/>or a hard-link clone of the seed<br/><i>≈ 10 s to 15 min</i>"]:::script --> R2["<b>run rustock</b><br/>import-blocks (the adapter)<br/><i>≈ 10 s to 15 min</i>"]:::script
+        R2 --> R3["<b>hash gate</b><br/>check-run.sh · every hash equals<br/>samples/&lt;scenario&gt;/reference_hashes.txt"]:::check
+    end
+
+    subgraph LIVE ["live cycle · each client mines its own blocks under k6"]
+        direction TB
+        L1["<b>arm A</b><br/>live-arm.sh · 30 min · k6 option 7 or 14<br/>gas price: head minimum x 1.1 on both"]:::script --> L2["<b>arm B</b><br/>the other client, same load<br/><i>30 min</i>"]:::script
+        L2 --> L3["<b>cross replay</b><br/>replay-docker.sh --blocks · A's blocks<br/>into B and B's into A<br/><i>≈ 1 min</i>"]:::check
+        L3 --> L4["<b>four checks</b><br/>check-live-arm.sh · hashes equal, log holds<br/>its own blocks, k6 rate held, 20+ full blocks"]:::check
+    end
+
+    B -- "--kind replay" --> REPLAY
+    B -- "--kind live" --> LIVE
+    R3 -. "hash differs" .-> V
+    L4 -. "cross replay differs" .-> V
+    L4 -. "arm measured nothing" .-> DROP(["arm discarded,<br/>cycle repeated"]):::idle
+    R3 --> J
+    L4 --> J
+    J{"<b>judge</b><br/>stats.py · after 6 cycles<br/>sign test on paired cycles"}:::check
+    J -- "consistent, p > 0.05" --> MORE(["up to 12 cycles"]):::idle --> REPLAY
+    J -- "decided" --> REP["<b>report</b><br/>report.py · report.md<br/>summary, per-cycle and per-phase tables"]:::script
+    REP --> AN["<b>agent-analyst</b> · Opus<br/>where the time goes, phase by phase,<br/>profiling when the numbers are not enough"]:::agent
+    AN --> WR(["<b>agent-writer</b> · Sonnet<br/>the summary the user reads<br/>docs and HANDOFF updated"]):::done
+
+    V["<b>agent-validator</b> · Sonnet<br/>first diverging block and phase,<br/>a consensus finding"]:::agent
+    V --> ISS(["written up for upstream<br/>docs/issues/ · never timed"]):::dead
+    DROP -. "harness fault" .-> AD
+    V -. "harness fault<br/>(config, import, timing, packaging)" .-> AD["<b>agent-adapter</b> · Opus<br/>harness/&lt;topic&gt; branch, PR text in docs/prs/,<br/>merged into clients-lab/harness,<br/>rebuilt as clients-lab/comparison"]:::agent
+    AD --> B
+    DG["<b>agent-diagnose</b> · Haiku<br/>client, harness or machine fault?<br/><i>≈ 20 s</i>"]:::agent
+    DG -. "machine" .-> B
+    REPLAY -. "a run fails" .-> DG
+    LIVE -. "an arm fails" .-> DG
+
+    classDef agent  fill:#e8f0fe,stroke:#4a6fd1,color:#1a2b5e
+    classDef script fill:#fff5dc,stroke:#c99a2e,color:#4a3a10
+    classDef check  fill:#f3e8fd,stroke:#8a4fd1,color:#3b1a5e
+    classDef done   fill:#dff5e3,stroke:#3a9a55,color:#123d1f
+    classDef dead   fill:#fde3e3,stroke:#c94b4b,color:#5a1515
+    classDef idle   fill:#eeeeee,stroke:#999999,color:#333333
+```
+
+Yellow: a script runs it. Purple: a script decides. Blue: a Claude agent
+(`.claude/agents/`), with its model. Green: the result the user reads. Red: a consensus
+finding, which is never timed. Dotted: a way back or out. `bin/lab.py` drives every step;
+one cycle holds the machine's lock from its first run to its last check, so another lab's
+short jobs may run between cycles but never inside one. On Boton the replay cycle is a slot:
+RSKj on box A and rustock on box B, the next slot swapped (`bin/boton-campaign.sh`); live
+cycles run on this Mac only.
 
 ## The rustock adapter
 
