@@ -419,3 +419,34 @@ Both fixes belong to the client, not the harness: the miner's cap is block produ
 RPC gate is node behaviour. Either reported upstream, or the lab pins k6's gas price to the
 head's minimum times 1.1 on both arms (the same rule RSKj applies, applied by the harness)
 and runs the comparison while the findings stand. That choice is the user's.
+
+### Mainnet seed result (2026-10-29-c1): rustock 2.73x faster on its own blocks
+
+The rerun of c6 with k6 pricing every transaction at the head block's `minimumGasPrice`
+times 1.1 on both arms (`live.k6_gas_price`, `GAS_PRICE_RULE` in the k6 suite). Six cycles,
+30-minute arms, ecdsa, rustock 1909b1c, 10g memory. Every arm counted: cross replays clean
+both ways in all six cycles, k6 100% everywhere, 87 to 120 qualifying blocks per arm.
+`campaigns/2026-10-29-c1/report.md`.
+
+| client | blocks mined per arm | qualifying | totalMs, trimmed mean |
+|---|---|---|---|
+| RSKj | 110 to 138 | 92 to 120 | 251.5 |
+| rustock | 106 to 123 | 87 to 104 | 93.4 |
+
+rustock faster in 6/6 cycles (2.43x to 2.84x), median -63.43%, sign-test p = 0.03125. Both
+clients are about 10% slower per block than on the empty database (c4: 227.3 and 78.1 ms),
+the state being a mainnet trie, and the ratio holds. Execution is the whole difference
+(226.6 against 90.7 ms); `saveReceiptsMs` is 10.4 against 0.9 and `initialValidationMs` 5.9
+against 0.1, both small.
+
+One harness lesson from cycle 6: RSKj's timed miner connected two blocks of its own at
+#9003625 within 44 ms and kept the second, so its log held 117 records for 116 exported
+blocks and the own-blocks check discarded the arm. `bin/check-live-arm.sh` now allows such
+a sibling (a block of the node's own, inside the arm's range, replaced at the same height),
+reports it as `own_siblings`, and keeps its lines out of the timing; anything else the
+export lacks still discards the arm. The arm was re-checked under that rule, not re-mined,
+and `bin/lab.py` now judges a campaign whose cycles are already complete instead of
+starting another cycle.
+
+Next: `2026-10-29-c2`, mainnet-sim under k6 option 14 on the same seed, the first live run
+of that scenario.

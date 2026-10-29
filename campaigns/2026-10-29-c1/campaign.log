@@ -1,0 +1,28 @@
+[2026-10-29T12:53:39Z] rskj e507f4503, rustock 1909b1c7e
+[2026-10-29T13:24:30Z] live ecdsa@mainnet c1-rskj: blocks 9003568..9003677 in 1838 s
+[2026-10-29T13:57:09Z] live ecdsa@mainnet c1-rustock: blocks 9003568..9003686 in 1949 s
+[2026-10-29T13:58:48Z] live ecdsa@mainnet c1-rskj: 110 blocks mined, 92 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T13:58:49Z] live ecdsa@mainnet c1-rustock: 119 blocks mined, 100 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T14:31:29Z] live ecdsa@mainnet c2-rustock: blocks 9003568..9003684 in 1949 s
+[2026-10-29T15:02:49Z] live ecdsa@mainnet c2-rskj: blocks 9003568..9003682 in 1846 s
+[2026-10-29T15:03:57Z] live ecdsa@mainnet c2-rustock: 117 blocks mined, 98 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T15:03:57Z] live ecdsa@mainnet c2-rskj: 115 blocks mined, 97 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T15:34:49Z] live ecdsa@mainnet c3-rskj: blocks 9003568..9003689 in 1840 s
+[2026-10-29T16:07:34Z] live ecdsa@mainnet c3-rustock: blocks 9003568..9003677 in 1954 s
+[2026-10-29T16:09:38Z] live ecdsa@mainnet c3-rskj: 122 blocks mined, 104 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T16:09:39Z] live ecdsa@mainnet c3-rustock: 110 blocks mined, 91 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T16:42:21Z] live ecdsa@mainnet c4-rustock: blocks 9003568..9003690 in 1950 s
+[2026-10-29T17:14:03Z] live ecdsa@mainnet c4-rskj: blocks 9003568..9003696 in 1847 s
+[2026-10-29T17:16:27Z] live ecdsa@mainnet c4-rustock: 123 blocks mined, 104 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T17:16:27Z] live ecdsa@mainnet c4-rskj: 129 blocks mined, 111 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T17:47:28Z] live ecdsa@mainnet c5-rskj: blocks 9003568..9003705 in 1844 s
+[2026-10-29T18:20:10Z] live ecdsa@mainnet c5-rustock: blocks 9003568..9003678 in 1953 s
+[2026-10-29T18:22:00Z] live ecdsa@mainnet c5-rskj: 138 blocks mined, 120 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T18:22:01Z] live ecdsa@mainnet c5-rustock: 111 blocks mined, 92 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T18:54:38Z] live ecdsa@mainnet c6-rustock: blocks 9003568..9003673 in 1948 s
+[2026-10-29T19:26:03Z] live ecdsa@mainnet c6-rskj: blocks 9003568..9003683 in 1836 s
+[2026-10-29T19:27:01Z] live ecdsa@mainnet c6-rustock: 106 blocks mined, 87 qualifying, k6 100.0%, cross replay ok
+[2026-10-29T19:27:01Z] failed: live arm discarded, rerun the campaign to repeat the cycle: rskj ecdsa@mainnet c6-rskj: {'consensus_ok': False, 'kind': 'live', 'records': 117, 'expected': 116, 'first_difference': '> 9003625 f0832d4c79100715c2756610387ef75cbcaa3c0450ffad4151597774efeb6291', 'wall_s': 1836, 'client': 'rskj', 'artifact': '/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/state/builds/rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar', 'start_height': 9003567, 'end_height': 9003683, 'checks': {'cross_replay': True, 'own_blocks': False, 'k6': True, 'qualifying': True}, 'k6_success_pct': 100.0, 'k6_min_success_pct': 80.0, 'k6_metric': 'stress_call_success_rate', 'qualifying_blocks': 98, 'min_qualifying_blocks': 20, 'tx_count': 11099, 'gas_used': 2857937040, 'cross_replay': {'consensus_ok': True, 'records': 116, 'expected': 116, 'first_difference': '', 'wall_s': 12, 'client': 'rustock', 'artifact': 'clientslab-rustock:1909b1c7ea16-linux-arm64'}}
+[2026-10-29T19:29:36Z] rskj e507f4503, rustock 1909b1c7e
+[2026-10-29T19:35:47Z] rskj e507f4503, rustock 1909b1c7e
+[2026-10-29T19:35:47Z] docker ecdsa@mainnet after 6 cycles: rustock faster (rustock faster in 6/6 cycles, median -63.43%, sign-test p=0.03125)

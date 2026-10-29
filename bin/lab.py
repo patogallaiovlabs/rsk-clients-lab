@@ -172,23 +172,23 @@ def run_docker(c, scen):
         # A sequential campaign (docs/mainnet-db-plan.md) runs one client's cycles now and the
         # other's later with `run --clients`; a cycle is complete when every listed client is.
         clients = tuple(c.get("clients", ["rskj", "rustock"]))
-        if all(os.path.exists(os.path.join(d, f"c{k}-{x}", "consensus.json")) and stats.per_block(os.path.join(d, f"c{k}-{x}"))
-               for x in clients):
-            continue  # done in an earlier attempt
-        order = clients if k % 2 or len(clients) == 1 else tuple(reversed(clients))
-        # One cycle holds the Docker slot as a long holder: another lab's short jobs
-        # may run between cycles, never between the two runs of one cycle.
-        env = {"CLIENTSLAB_PRIORITY": str(c["queued_epoch"])}
-        cmd = f'. "{BIN}/lib.sh"; lock_acquire docker "long:$CLIENTSLAB_PRIORITY"; trap "lock_release docker" EXIT; ' \
-              f'"{sys.executable}" "{BIN}/lab.py" _cycle "{c["id"]}" "{scen}" {k} {" ".join(order)}'
-        r = subprocess.run(["bash", "-c", cmd], env=dict(os.environ, **env))
-        if r.returncode == 3:
-            raise ConsensusFailure(open(os.path.join(d, "consensus-failure.txt")).read())
-        if r.returncode == 4:
-            raise RuntimeError("live arm discarded, rerun the campaign to repeat the cycle: "
-                               + open(os.path.join(d, "arm-discarded.txt")).read())
-        if r.returncode != 0:
-            raise RuntimeError(f"docker cycle {k} of {scen} failed (exit {r.returncode})")
+        done = all(os.path.exists(os.path.join(d, f"c{k}-{x}", "consensus.json")) and stats.per_block(os.path.join(d, f"c{k}-{x}"))
+                   for x in clients)
+        if not done:  # else: done in an earlier attempt, but still judged below
+            order = clients if k % 2 or len(clients) == 1 else tuple(reversed(clients))
+            # One cycle holds the Docker slot as a long holder: another lab's short jobs
+            # may run between cycles, never between the two runs of one cycle.
+            env = {"CLIENTSLAB_PRIORITY": str(c["queued_epoch"])}
+            cmd = f'. "{BIN}/lib.sh"; lock_acquire docker "long:$CLIENTSLAB_PRIORITY"; trap "lock_release docker" EXIT; ' \
+                  f'"{sys.executable}" "{BIN}/lab.py" _cycle "{c["id"]}" "{scen}" {k} {" ".join(order)}'
+            r = subprocess.run(["bash", "-c", cmd], env=dict(os.environ, **env))
+            if r.returncode == 3:
+                raise ConsensusFailure(open(os.path.join(d, "consensus-failure.txt")).read())
+            if r.returncode == 4:
+                raise RuntimeError("live arm discarded, rerun the campaign to repeat the cycle: "
+                                   + open(os.path.join(d, "arm-discarded.txt")).read())
+            if r.returncode != 0:
+                raise RuntimeError(f"docker cycle {k} of {scen} failed (exit {r.returncode})")
         if k >= c["cycles"]:
             v = stats.judge("docker", d, scen)
             log(f"docker {scen} after {k} cycles: {v['verdict']} ({v['why']})", c)

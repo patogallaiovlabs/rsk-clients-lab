@@ -10,7 +10,8 @@
 # four checks of docs/live-mining-plan.md section 4 hold:
 #   1. cross replay: every block connected in the other client with the hash the miner gave it;
 #   2. the node's own blocks: one breakdown line per exported block, all above the start
-#      height, with the export's hashes (the log starts empty);
+#      height, with the export's hashes (the log starts empty); a block of its own that the
+#      node replaced at the same height (a sibling) is allowed and kept out of the timing;
 #   3. k6: the scenario's success rate (config.json live.k6_success_metric per k6 option,
 #      read from the k6 summary) at least live.k6_min_success_pct;
 #   4. at least live.min_qualifying_blocks blocks at least threshold full, after the first
@@ -40,10 +41,29 @@ shopt -s nullglob; ROT=( "$OUT"/block-breakdown-*.log.gz ); shopt -u nullglob
   | sort -n -k1,1 > "$OUT/log-hashes.txt" || true
 RECORDS=$(wc -l < "$OUT/log-hashes.txt" | tr -d ' ')
 BELOW=$(awk -v s="$START" '$1 <= s' "$OUT/log-hashes.txt" | wc -l | tr -d ' ')
+# A miner may connect two blocks of its own at one height within milliseconds and keep the
+# second (RSKj's timed miner, 2026-10-29-c1 cycle 6: two "best" lines for #9003625, 44 ms
+# apart). The replaced one is the node's own block, inside the arm's range, and is not in
+# the export: it is listed as a sibling, kept out of the timing, and does not discard the
+# arm. Anything else in the log that the export lacks (a block past the end height, or at
+# a height with no exported record) still does.
+sort -k2,2 "$OUT/hashes.txt" > "$OUT/.exp"; sort -k2,2 "$OUT/log-hashes.txt" > "$OUT/.log"
+MISSING=$(join -v1 -j2 "$OUT/.exp" "$OUT/.log" | wc -l | tr -d ' ')
+join -v2 -j2 "$OUT/.exp" "$OUT/.log" | awk '{print $2, $1}' | sort -n -k1,1 > "$OUT/extra-hashes.txt"
+rm -f "$OUT/.exp" "$OUT/.log"
+SIBLINGS=$(awk -v s="$START" -v e="$END" 'NR==FNR {h[$1]=1; next} $1 > s && $1 <= e && h[$1]' \
+  "$OUT/hashes.txt" "$OUT/extra-hashes.txt" | wc -l | tr -d ' ')
+EXTRA=$(wc -l < "$OUT/extra-hashes.txt" | tr -d ' ')
 LOG_OK=false
-[ "$RECORDS" -gt 0 ] && [ "$RECORDS" = "$EXPECTED" ] && [ "$BELOW" = 0 ] \
-  && cmp -s "$OUT/log-hashes.txt" "$OUT/hashes.txt" && LOG_OK=true
+[ "$RECORDS" -gt 0 ] && [ "$BELOW" = 0 ] && [ "$MISSING" = 0 ] && [ "$EXTRA" = "$SIBLINGS" ] && LOG_OK=true
 FIRST_BAD=$(diff "$OUT/hashes.txt" "$OUT/log-hashes.txt" 2>/dev/null | grep -m1 '^[<>]' || true)
+[ $LOG_OK = true ] && FIRST_BAD=""
+# The sibling's lines leave the breakdown input the analyzer and the totals read.
+if [ "$SIBLINGS" -gt 0 ]; then
+  { cat "${BD[@]}" 2>/dev/null; [ ${#ROT[@]} -eq 0 ] || gzcat "${ROT[@]}"; } \
+    | grep -v -F -f <(awk '{print "hash=" $2}' "$OUT/extra-hashes.txt") > "$OUT/block-breakdown.canonical.log" || true
+  BD=( "$OUT/block-breakdown.canonical.log" ); ROT=()
+fi
 
 # --- 1. cross replay ----------------------------------------------------------------------
 CROSS="$OUT/cross/consensus.json"; CROSS_OK=false; CROSS_JSON=null; CROSS_RAN=false
@@ -107,11 +127,11 @@ OK=false
 [ $CROSS_OK = true ] && [ $LOG_OK = true ] && [ "$K6_OK" = true ] && [ $Q_OK = true ] && OK=true
 jq -n --argjson ok $OK --argjson records "$RECORDS" --argjson expected "$EXPECTED" --arg first_bad "$FIRST_BAD" \
   --argjson wall "$WALL" --arg client "$CLIENT" --arg artifact "$ART" --argjson start "$START" --argjson end "$END" \
-  --argjson cross_ran $CROSS_RAN --argjson cross_ok $CROSS_OK --argjson log_ok $LOG_OK --argjson q_ok $Q_OK \
+  --argjson cross_ran $CROSS_RAN --argjson cross_ok $CROSS_OK --argjson log_ok $LOG_OK --argjson q_ok $Q_OK --argjson siblings "$SIBLINGS" \
   --argjson k6 "$K6" --argjson q "$Q" --argjson min_q "$MIN_Q" --argjson cross "$CROSS_JSON" --argjson totals "$TOTALS" \
   '{consensus_ok:$ok, kind:"live", records:$records, expected:$expected, first_difference:$first_bad,
     wall_s:$wall, client:$client, artifact:$artifact, start_height:$start, end_height:$end,
-    checks:{cross_replay:$cross_ok, own_blocks:$log_ok, k6:$k6.ok, qualifying:$q_ok},
+    checks:{cross_replay:$cross_ok, own_blocks:$log_ok, k6:$k6.ok, qualifying:$q_ok}, own_siblings:$siblings,
     k6_success_pct:$k6.success_pct, k6_min_success_pct:$k6.min_pct, k6_metric:$k6.metric,
     qualifying_blocks:$q, min_qualifying_blocks:$min_q, tx_count:$totals.tx_count, gas_used:$totals.gas_used,
     cross_replay:(if $cross_ran then $cross else "not run" end)}' > "$OUT/consensus.json"

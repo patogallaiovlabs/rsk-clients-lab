@@ -1,0 +1,118 @@
+{
+ "where": "docker",
+ "scenario": "ecdsa@mainnet",
+ "cycles": 6,
+ "verdict": "rustock faster",
+ "why": "rustock faster in 6/6 cycles, median -63.43%, sign-test p=0.03125",
+ "totalMs": {
+  "tmean": {
+   "median_pct": -63.43,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -64.75,
+    -61.91,
+    -58.77,
+    -64.12,
+    -64.53,
+    -62.73
+   ]
+  },
+  "mean": {
+   "median_pct": -59.48,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -60.1,
+    -57.52,
+    -48.66,
+    -59.41,
+    -61.93,
+    -59.55
+   ]
+  },
+  "median": {
+   "median_pct": -61.5,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -60.96,
+    -61.3,
+    -60.61,
+    -64.68,
+    -63.62,
+    -61.7
+   ]
+  }
+ },
+ "phases": {
+  "executeMs": {
+   "median_pct": -60.18,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "initialValidationMs": {
+   "median_pct": -97.55,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "onBestBlockMs": {
+   "median_pct": 68.27,
+   "rustock_faster": 0,
+   "n": 6,
+   "p": 0.03125
+  },
+  "preambleMs": {
+   "median_pct": -99.11,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "saveReceiptsMs": {
+   "median_pct": -86.98,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "switchChainMs": {
+   "median_pct": -36.93,
+   "rustock_faster": 4,
+   "n": 6,
+   "p": 0.6875
+  }
+ },
+ "absolute_ms": {
+  "rskj": {
+   "executeMs": 226.624,
+   "extendAlternativeChainMs": 0.967,
+   "initialValidationMs": 5.927,
+   "onBestBlockMs": 0.089,
+   "onBlockMs": 0.0,
+   "postExecuteValidationMs": 0.0,
+   "preambleMs": 2.649,
+   "processBestMs": 0.0,
+   "saveReceiptsMs": 10.386,
+   "statePersistMs": 0.118,
+   "stateRootRegisterMs": 0.0,
+   "switchChainMs": 0.704,
+   "totalMs": 251.465,
+   "txExecutionMs": 224.583
+  },
+  "rustock": {
+   "executeMs": 90.676,
+   "initialValidationMs": 0.146,
+   "onBestBlockMs": 0.157,
+   "postExecuteValidationMs": 0.001,
+   "preambleMs": 0.021,
+   "saveReceiptsMs": 0.92,
+   "switchChainMs": 0.506,
+   "totalMs": 93.372,
+   "trieSaveMs": 0.796
+  }
+ }
+}
