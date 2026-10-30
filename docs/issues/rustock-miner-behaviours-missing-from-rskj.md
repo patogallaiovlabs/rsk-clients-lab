@@ -30,3 +30,32 @@ the rskj test for each.
 
 Each is a port of the named rskj class with its tests; the minimum gas price target is a
 one-line wiring in `crates/cli/src/main.rs` plus the tests.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate`, all six:
+
+- `SubmissionRateLimiter` on the miner server, `--mining-submission-rate-limit-ms` (zero, rskj's
+  default, disables it); a refused submission answers `RateLimited`, and the submission counts
+  whether or not the work is found, as `processSolution` has it.
+- A resubmitted solution is recognised by its completed block hash before the parent check and
+  answered `EXIST`, as `addNewMinedBlock` does; rustock's own test asserting the old error is
+  replaced by the port of `submitTwoBitcoinBlocksAtSameTimeWithoutRateLimit`.
+- The sync service carries `BestBlockListeners`; the miner registers `on_best_block`, which
+  resets the fee accumulator and rebuilds. The pool carries an `on_added` listener; behind
+  `--mining-update-work-on-new-transaction` (off by default, as rskj's
+  `updateWorkOnNewTransaction`) the miner's `RebuildPolicy` rebuilds once arrivals pay a tenth
+  of the candidate's fees, rskj's `isWorthRebuilding`.
+- `extraData` is rskj's RLP `[1, "<version>-<commit>", client]`, the client string cut to keep
+  the field within 32 bytes (`mining/extra_data.rs`); the commit comes from `RUSTOCK_GIT_COMMIT`
+  at build time, "unknown" otherwise.
+- `--mining-min-gas-price` sets `MiningConfig.min_gas_price_target`, so the RSKIP-09 step already
+  implemented is reached.
+- `filter_candidates` reports the underpriced and over-cap candidates as rskj's `txsToRemove`, and
+  the builder removes them from the pool through `remove_transactions` (the hook that already
+  carried the EVM-refused ones).
+
+Tests ported: the six `SubmissionRateLimitHandlerTest` cases, `MinerServerTest`'s two
+rate-limit submissions, three `extraData` cases, `onBestBlockBuildBlockToMine`,
+`onNewTxBuildBlockToMine`, the two `rebuilds*` cases and `secondBuildBlockToMineTurnsNotifyFlagOff`,
+the seven `MinimumGasPriceCalculatorTest` cases, and `MinerUtilsTest.invalidGasPriceTransactionTest`.
