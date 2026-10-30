@@ -46,3 +46,16 @@ rskj has this test already: `MinerUtilsTest.filterTransactions_whenRskip252Enabl
 (with its `...Disabled...` twin). rustock ported the import rule and its test
 (`block_txs_max_gas_price_enforces_the_100x_cap_from_rskip252`) but not the miner's; porting
 that test is the natural start.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate` (on top of
+1909b1c), uncommitted until the user says so. Selection (`filter_candidates`, rskj
+`MinerUtils.filterTransactions`) drops a transaction priced over 100 times the template's
+minimum from the RSKIP252 height on, with the same zero-minimum short-circuit as
+`TxGasPriceCap`, and the assembled block is run through the body rules every peer applies
+(`BlockProcessor::validate_block_body_rules`: gas price floor and cap, REMASC last, extra data,
+minimum gas price step) before it is handed out. Tests ported: rskj's `filterTransactions_...`
+pair as `filter_transactions_when_rskip252_enabled_then_tx_with_more_gas_price_than_cap_excluded`
+and `..._disabled_then_tx_included_regardless_gas_price`, plus the template-level
+`a_transaction_over_the_rskip252_cap_is_left_out_of_the_template`.

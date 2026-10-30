@@ -41,3 +41,18 @@ its receipt's gas used, not its limit. The template is executed once already to 
 roots (`build`), so the cost is the ordering, not an extra execution. A test: ten candidates
 declaring 5 M each and using 1 M each on a 25 M block; rskj's rule includes all ten, the
 current rule five.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate` (on top of
+1909b1c), uncommitted until the user says so. `select_transactions` no longer cuts by declared
+limits; the candidates are executed once (`RskExecutor::execute_block_for_mining`) and a
+candidate is dropped when its gas limit does not fit in the block limit minus the gas used so
+far, with the same sender's later transactions, as rskj's `executeAndFill` discards them. The
+probe doubles as the RSKIP-144 partition pass, so a template still executes twice; an idle
+chain (REMASC only) skips the probe. The same rule now rejects a block on import, as rskj's
+`TransactionExecutor.gasIsValid` does ("Too much gas used in this block"); it was not enforced
+before. Tests: `a_block_is_filled_by_gas_used_not_by_declared_limits` (ten transfers declaring
+3 M each on a 10 M block, with and without RSKIP-144),
+`a_transaction_that_does_not_fit_is_dropped_with_its_senders_successors`, and on the import
+side `a_transaction_whose_limit_exceeds_the_blocks_remaining_gas_invalidates_the_block`.

@@ -44,3 +44,14 @@ rskj has this test already: `EthereumImplTest.getGasPrice_returns_correctedBestB
 (with its `..._true` twin). rustock's `test_eth_gas_price_uses_the_tracker` and
 `test_eth_gas_price_falls_back_to_the_block_minimum` cover a tracker present or absent, never
 the fee-market flag; porting rskj's pair is the natural start.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate` (on top of
+1909b1c), uncommitted until the user says so. `GasPriceSource` gained `is_fee_market_working`;
+`eth_gas_price` answers the head minimum times 1.1 (rskj's `rpc.minGasPriceMultiplier`
+default, the same double-then-truncate arithmetic: 587 wei gives 645) while the market is not
+working, the tracker's price otherwise. Tests ported: rskj's `getGasPrice_returns_...` pair as
+`test_eth_gas_price_uses_the_tracker` and
+`test_eth_gas_price_returns_corrected_best_block_value_when_fee_market_is_not_working`, plus
+`corrected_minimum_gas_price_truncates_like_rskj`.

@@ -12,6 +12,9 @@ Both bugs have an rskj test that names the missing behaviour:
 | `MinerUtilsTest.filterTransactions_whenRskip252EnabledThenTxWithMoreGasPriceThanCapExcluded` | no test; the cap is tested on import only |
 | `EthereumImplTest.getGasPrice_returns_correctedBestBlockValue_when_feeMarketWorking_is_false` | no test; tracker present or absent is tested, the flag is not |
 
+Both rows are closed as of 2026-10-30 (see the status at the end of each issue); the table
+stands as the example of the gap this proposal is about.
+
 The port went class by class: validators in one commit, the miner in another, the gas
 price tracker in a third. A rule rskj applies in two classes (the cap: `BlockTxsMaxGasPriceRule`
 and `MinerUtils`) or in the caller of the ported class (the gate: `EthereumImpl`, not the
