@@ -34,3 +34,18 @@ Also, `account_slots = 0` is accepted by the CLI and then refuses every transact
 
 Add the four steps in `validate_tx`, in rskj's order, and reject a zero `account_slots` at
 startup. Port the `co.rsk.net.handler.txvalidator` tests the parity table marks as gaps.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate`. The pool
+takes `ChainRules` (the hardfork ladder, the free Bridge senders, the sequential sublist
+minimum, the RSKIP252 height), which the node builds from its chain config, and `validate_tx`
+now follows `TxPendingValidator` step by step: the gas limit is bounded by the larger sublist
+once RSKIP351 and RSKIP144 are active, a free Bridge transaction skips the balance check and
+costs no intrinsic gas (also in the pending-plus-new cost, rskj's `getTxBaseCost`), and a price
+over 80 times the block minimum is refused from RSKIP252 on. A nonce with leading zeros or
+more than eight bytes is refused on the raw bytes before decoding. `account_slots` under 1 is
+refused at the flag and at pool construction. Tests ported: the two
+`TxValidatorMaximumGasPriceValidatorTest` cases, `validateNonceEncoding` case for case plus an
+on-the-wire test, `balanceIsNotValidatedIfFreeTx`, `validIntrinsicGasPrice`'s free case,
+`illegalAccountSlotsValue_Zero`, and a sublist-bound test for `TxPendingValidator`.
