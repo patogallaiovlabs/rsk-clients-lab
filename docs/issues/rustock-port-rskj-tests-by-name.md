@@ -31,3 +31,15 @@ Start with the consensus packages, a few days of work: `co.rsk.validators` (75 t
 `co.rsk.mine` (132), `co.rsk.net.handler.txvalidator` (21), `org.ethereum.facade` (2). Keep
 the table in the repository so later ports update it. The two issues above are its first
 two gaps.
+
+## Status
+
+Done for the four packages on 2026-10-30. The table lives in rustock as
+`docs/rskj-test-parity.md` (branch `fix/miner-gas-packing-cap-and-gasprice-gate`): 211 tests,
+109 covered, 20 not applicable, 82 gaps. The gaps whose code check found the behaviour missing
+or different are filed here: `rustock-rskip179-btc-timestamp-link.md`,
+`rustock-timestamp-bound-and-min-gas-limit-constants.md`,
+`rustock-miner-invalid-tx-aborts-template-and-no-sync-gate.md`,
+`rustock-txpool-admission-diverges-from-rskj.md`,
+`rustock-miner-behaviours-missing-from-rskj.md`. The rest of the gaps have the behaviour and
+lack the test; the table names each. The other rskj packages remain to be done.
