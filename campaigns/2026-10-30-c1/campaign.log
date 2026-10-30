@@ -1,0 +1,37 @@
+[2026-10-30T19:27:40Z] rskj e507f4503, rustock 6712f28f9
+[2026-10-30T19:28:34Z] docker mainnet-sim c1-rskj: 1159 blocks in 38 s
+[2026-10-30T19:29:40Z] docker mainnet-sim c1-rustock: 1159 blocks in 65 s
+[2026-10-30T19:29:40Z] docker mainnet-sim after 1 cycles: extend (rustock faster in 0/1 cycles, median +212.34%, sign-test p=1.0)
+[2026-10-30T19:30:45Z] docker mainnet-sim c2-rustock: 1159 blocks in 63 s
+[2026-10-30T19:31:21Z] docker mainnet-sim c2-rskj: 1159 blocks in 36 s
+[2026-10-30T19:31:21Z] docker mainnet-sim after 2 cycles: extend (rustock faster in 0/2 cycles, median +212.05%, sign-test p=0.5)
+[2026-10-30T19:31:58Z] docker mainnet-sim c3-rskj: 1159 blocks in 35 s
+[2026-10-30T19:33:03Z] docker mainnet-sim c3-rustock: 1159 blocks in 64 s
+[2026-10-30T19:33:03Z] docker mainnet-sim after 3 cycles: extend (rustock faster in 0/3 cycles, median +211.76%, sign-test p=0.25)
+[2026-10-30T19:34:05Z] docker mainnet-sim c4-rustock: 1159 blocks in 60 s
+[2026-10-30T19:34:42Z] docker mainnet-sim c4-rskj: 1159 blocks in 37 s
+[2026-10-30T19:34:42Z] docker mainnet-sim after 4 cycles: extend (rustock faster in 0/4 cycles, median +209.61%, sign-test p=0.125)
+[2026-10-30T19:35:21Z] docker mainnet-sim c5-rskj: 1159 blocks in 37 s
+[2026-10-30T19:36:25Z] docker mainnet-sim c5-rustock: 1159 blocks in 63 s
+[2026-10-30T19:36:25Z] docker mainnet-sim after 5 cycles: extend (rustock faster in 0/5 cycles, median +207.46%, sign-test p=0.0625)
+[2026-10-30T19:37:31Z] docker mainnet-sim c6-rustock: 1159 blocks in 64 s
+[2026-10-30T19:38:08Z] docker mainnet-sim c6-rskj: 1159 blocks in 36 s
+[2026-10-30T19:38:08Z] docker mainnet-sim after 6 cycles: rustock slower (rustock faster in 0/6 cycles, median +209.61%, sign-test p=0.03125)
+[2026-10-30T19:39:02Z] docker ecdsa c1-rskj: 207 blocks in 53 s
+[2026-10-30T19:39:21Z] docker ecdsa c1-rustock: 207 blocks in 19 s
+[2026-10-30T19:39:21Z] docker ecdsa after 1 cycles: extend (rustock faster in 1/1 cycles, median -64.64%, sign-test p=1.0)
+[2026-10-30T19:39:41Z] docker ecdsa c2-rustock: 207 blocks in 18 s
+[2026-10-30T19:40:30Z] docker ecdsa c2-rskj: 207 blocks in 49 s
+[2026-10-30T19:40:30Z] docker ecdsa after 2 cycles: extend (rustock faster in 2/2 cycles, median -63.09%, sign-test p=0.5)
+[2026-10-30T19:41:20Z] docker ecdsa c3-rskj: 207 blocks in 48 s
+[2026-10-30T19:41:39Z] docker ecdsa c3-rustock: 207 blocks in 19 s
+[2026-10-30T19:41:39Z] docker ecdsa after 3 cycles: extend (rustock faster in 3/3 cycles, median -61.55%, sign-test p=0.25)
+[2026-10-30T19:41:58Z] docker ecdsa c4-rustock: 207 blocks in 19 s
+[2026-10-30T19:42:48Z] docker ecdsa c4-rskj: 207 blocks in 48 s
+[2026-10-30T19:42:48Z] docker ecdsa after 4 cycles: extend (rustock faster in 4/4 cycles, median -61.45%, sign-test p=0.125)
+[2026-10-30T19:43:43Z] docker ecdsa c5-rskj: 207 blocks in 55 s
+[2026-10-30T19:44:03Z] docker ecdsa c5-rustock: 207 blocks in 19 s
+[2026-10-30T19:44:03Z] docker ecdsa after 5 cycles: extend (rustock faster in 5/5 cycles, median -61.55%, sign-test p=0.0625)
+[2026-10-30T19:44:22Z] docker ecdsa c6-rustock: 207 blocks in 19 s
+[2026-10-30T19:45:18Z] docker ecdsa c6-rskj: 207 blocks in 55 s
+[2026-10-30T19:45:18Z] docker ecdsa after 6 cycles: rustock faster (rustock faster in 6/6 cycles, median -62.09%, sign-test p=0.03125)

@@ -1,0 +1,14 @@
+[2026-10-30T20:51:01Z] rskj e507f4503, rustock 71d3de24f
+[2026-10-30T20:51:23Z] docker ecdsa c1-rskj: 207 blocks in 20 s
+[2026-10-30T20:51:42Z] docker ecdsa c1-rustock: 207 blocks in 19 s
+[2026-10-30T20:52:01Z] docker ecdsa c2-rustock: 207 blocks in 19 s
+[2026-10-30T20:52:23Z] docker ecdsa c2-rskj: 207 blocks in 21 s
+[2026-10-30T20:52:44Z] docker ecdsa c3-rskj: 207 blocks in 21 s
+[2026-10-30T20:53:03Z] docker ecdsa c3-rustock: 207 blocks in 19 s
+[2026-10-30T20:53:22Z] docker ecdsa c4-rustock: 207 blocks in 18 s
+[2026-10-30T20:53:44Z] docker ecdsa c4-rskj: 207 blocks in 20 s
+[2026-10-30T20:54:05Z] docker ecdsa c5-rskj: 207 blocks in 21 s
+[2026-10-30T20:54:25Z] docker ecdsa c5-rustock: 207 blocks in 20 s
+[2026-10-30T20:54:44Z] docker ecdsa c6-rustock: 207 blocks in 18 s
+[2026-10-30T20:55:05Z] docker ecdsa c6-rskj: 207 blocks in 20 s
+[2026-10-30T20:55:05Z] docker ecdsa after 6 cycles: rustock faster (rustock faster in 6/6 cycles, median -6.58%, sign-test p=0.03125)
