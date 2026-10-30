@@ -425,7 +425,7 @@ RPC gate is node behaviour. Either reported upstream, or the lab pins k6's gas p
 head's minimum times 1.1 on both arms (the same rule RSKj applies, applied by the harness)
 and runs the comparison while the findings stand. That choice is the user's.
 
-### Mainnet seed result (2026-10-29-c1): rustock 2.73x faster on its own blocks
+### Mainnet seed result (2026-10-29-c1): rustock 2.58x faster on its own blocks
 
 The rerun of c6 with k6 pricing every transaction at the head block's `minimumGasPrice`
 times 1.1 on both arms (`live.k6_gas_price`, `GAS_PRICE_RULE` in the k6 suite). Six cycles,
@@ -435,14 +435,21 @@ both ways in all six cycles, k6 100% everywhere, 87 to 120 qualifying blocks per
 
 | client | blocks mined per arm | qualifying | totalMs, trimmed mean |
 |---|---|---|---|
-| RSKj | 110 to 138 | 92 to 120 | 251.5 |
-| rustock | 106 to 123 | 87 to 104 | 93.4 |
+| RSKj | 110 to 138 | 62 to 90 | 236.9 |
+| rustock | 106 to 123 | 57 to 74 | 92.9 |
 
-rustock faster in 6/6 cycles (2.43x to 2.84x), median -63.43%, sign-test p = 0.03125. Both
-clients are about 10% slower per block than on the empty database (c4: 227.3 and 78.1 ms),
-the state being a mainnet trie, and the ratio holds. Execution is the whole difference
-(226.6 against 90.7 ms); `saveReceiptsMs` is 10.4 against 0.9 and `initialValidationMs` 5.9
-against 0.1, both small.
+rustock faster in 6/6 cycles (2.28x to 2.78x), median -61.30%, sign-test p = 0.03125. Both
+clients are slower per block than on the empty database (c4: 227.3 and 78.1 ms), the state
+being a mainnet trie, and the ratio holds. Execution is the whole difference (218.2 against
+89.6 ms); `initialValidationMs` is 7.3 against 0.2, small.
+
+These numbers are the 2026-10-30 re-read with `live.min_block` 50. The campaign first
+reported 251.5 against 93.4 ms, 2.73x, with the cut at 20 blocks. RSKj's JIT is still
+warming between blocks 21 and 50 of an arm (its per-block time keeps falling there,
+rustock's is flat from the start), so the cut at 20 charged RSKj for part of its warm-up.
+Moving the cut to 50 for both clients drops it: RSKj's trimmed mean falls 6%, rustock's
+does not move, and 57 to 90 qualifying blocks remain per arm. The arms were re-checked and
+re-judged from their logs, no new mining.
 
 One harness lesson from cycle 6: RSKj's timed miner connected two blocks of its own at
 #9003625 within 44 ms and kept the second, so its log held 117 records for 116 exported
@@ -514,3 +521,13 @@ declared limits would hide the difference rather than measure it, and could not 
 transfers that succeed and the ones that revert. mainnet-sim live on rustock waits for the
 miner fix; the replay comparison on mainnet-sim is unaffected, since replay imports RSKj's
 blocks. The ERC-20 fix stands and applies to the next re-mining of the mainnet-sim samples.
+
+### rustock fixes under test (2026-10-30)
+
+The user wrote the three fixes on `fix/miner-gas-packing-cap-and-gasprice-gate` (6712f28,
+one commit on 1909b1c): the miner packs by gas used, applies the RSKIP252 cap, and
+`eth_gasPrice` is gated on the fee market. `clients-lab/comparison` was fast-forwarded to it.
+This is a deliberate step outside the adapter boundary: these are client fixes written for
+upstream, carried on the comparison branch until upstream merges them, and every report
+from here names 6712f28. `2026-10-30-c1` (replay, both scenarios, one cycle) is the
+correctness gate for the new build; mainnet-sim live on rustock can rerun once it passes.

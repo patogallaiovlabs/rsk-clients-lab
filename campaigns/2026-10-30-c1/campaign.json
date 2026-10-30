@@ -1,0 +1,28 @@
+{
+ "id": "2026-10-30-c1",
+ "dir": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/campaigns/2026-10-30-c1",
+ "status": "running",
+ "queued_at": "2026-10-30T19:12:24Z",
+ "queued_epoch": 1793387544,
+ "kind": "replay",
+ "where": [
+  "docker"
+ ],
+ "scenarios": [
+  "mainnet-sim",
+  "ecdsa"
+ ],
+ "clients": [
+  "rskj",
+  "rustock"
+ ],
+ "cycles": 1,
+ "max_cycles": 12,
+ "refs": {
+  "rskj": "perf-lab/integration",
+  "rustock": "clients-lab/comparison"
+ },
+ "note": "Correctness gate for rustock 6712f28: clients-lab/comparison fast-forwarded to fix/miner-gas-packing-cap-and-gasprice-gate (pack by gas used, RSKIP252 cap, eth_gasPrice fee-market gate). Previous ref 1909b1c. These are client fixes written for upstream, carried here until upstream merges them.",
+ "results": {},
+ "started_at": "2026-10-30T19:12:33Z"
+}

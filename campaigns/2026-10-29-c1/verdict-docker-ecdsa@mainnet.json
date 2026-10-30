@@ -3,84 +3,84 @@
  "scenario": "ecdsa@mainnet",
  "cycles": 6,
  "verdict": "rustock faster",
- "why": "rustock faster in 6/6 cycles, median -63.43%, sign-test p=0.03125",
+ "why": "rustock faster in 6/6 cycles, median -61.30%, sign-test p=0.03125",
  "totalMs": {
   "tmean": {
-   "median_pct": -63.43,
+   "median_pct": -61.3,
    "rustock_faster": 6,
    "n": 6,
    "p": 0.03125,
    "deltas_pct": [
-    -64.75,
-    -61.91,
-    -58.77,
-    -64.12,
-    -64.53,
-    -62.73
+    -61.35,
+    -60.36,
+    -56.05,
+    -61.24,
+    -64.08,
+    -61.4
    ]
   },
   "mean": {
-   "median_pct": -59.48,
+   "median_pct": -54.2,
    "rustock_faster": 6,
    "n": 6,
    "p": 0.03125,
    "deltas_pct": [
-    -60.1,
-    -57.52,
-    -48.66,
-    -59.41,
-    -61.93,
-    -59.55
+    -54.27,
+    -54.1,
+    -45.23,
+    -54.14,
+    -62.7,
+    -58.09
    ]
   },
   "median": {
-   "median_pct": -61.5,
+   "median_pct": -60.81,
    "rustock_faster": 6,
    "n": 6,
    "p": 0.03125,
    "deltas_pct": [
-    -60.96,
-    -61.3,
-    -60.61,
-    -64.68,
-    -63.62,
-    -61.7
+    -59.88,
+    -60.01,
+    -60.31,
+    -63.58,
+    -64.16,
+    -61.31
    ]
   }
  },
  "phases": {
   "executeMs": {
-   "median_pct": -60.18,
+   "median_pct": -59.35,
    "rustock_faster": 6,
    "n": 6,
    "p": 0.03125
   },
   "initialValidationMs": {
-   "median_pct": -97.55,
+   "median_pct": -97.25,
    "rustock_faster": 6,
    "n": 6,
    "p": 0.03125
   },
   "onBestBlockMs": {
-   "median_pct": 68.27,
+   "median_pct": 57.07,
    "rustock_faster": 0,
    "n": 6,
    "p": 0.03125
   },
   "preambleMs": {
-   "median_pct": -99.11,
+   "median_pct": -98.95,
    "rustock_faster": 6,
    "n": 6,
    "p": 0.03125
   },
   "saveReceiptsMs": {
-   "median_pct": -86.98,
+   "median_pct": -68.29,
    "rustock_faster": 6,
    "n": 6,
    "p": 0.03125
   },
   "switchChainMs": {
-   "median_pct": -36.93,
+   "median_pct": -28.82,
    "rustock_faster": 4,
    "n": 6,
    "p": 0.6875
@@ -88,31 +88,31 @@
  },
  "absolute_ms": {
   "rskj": {
-   "executeMs": 226.624,
-   "extendAlternativeChainMs": 0.967,
-   "initialValidationMs": 5.927,
-   "onBestBlockMs": 0.089,
+   "executeMs": 218.186,
+   "extendAlternativeChainMs": 1.25,
+   "initialValidationMs": 7.285,
+   "onBestBlockMs": 0.132,
    "onBlockMs": 0.0,
    "postExecuteValidationMs": 0.0,
-   "preambleMs": 2.649,
+   "preambleMs": 2.692,
    "processBestMs": 0.0,
-   "saveReceiptsMs": 10.386,
-   "statePersistMs": 0.118,
+   "saveReceiptsMs": 3.793,
+   "statePersistMs": 0.087,
    "stateRootRegisterMs": 0.0,
-   "switchChainMs": 0.704,
-   "totalMs": 251.465,
-   "txExecutionMs": 224.583
+   "switchChainMs": 0.831,
+   "totalMs": 236.909,
+   "txExecutionMs": 216.45
   },
   "rustock": {
-   "executeMs": 90.676,
-   "initialValidationMs": 0.146,
-   "onBestBlockMs": 0.157,
+   "executeMs": 89.623,
+   "initialValidationMs": 0.195,
+   "onBestBlockMs": 0.2,
    "postExecuteValidationMs": 0.001,
-   "preambleMs": 0.021,
-   "saveReceiptsMs": 0.92,
-   "switchChainMs": 0.506,
-   "totalMs": 93.372,
-   "trieSaveMs": 0.796
+   "preambleMs": 0.026,
+   "saveReceiptsMs": 1.204,
+   "switchChainMs": 0.599,
+   "totalMs": 92.928,
+   "trieSaveMs": 0.785
   }
  }
 }

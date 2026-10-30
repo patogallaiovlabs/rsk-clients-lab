@@ -19,49 +19,49 @@ Per-block `totalMs`, 10% trimmed mean over the blocks at least 90% full.
 
 | scenario | where | RSKj ms/block | rustock ms/block | rustock vs RSKj | verdict |
 |---|---|---|---|---|---|
-| ecdsa@mainnet | docker | 251.5 | 93.4 | 2.73x faster | rustock faster |
+| ecdsa@mainnet | docker | 236.9 | 92.9 | 2.58x faster | rustock faster |
 
 ## ecdsa@mainnet, docker
 
-**rustock faster**: rustock faster in 6/6 cycles, median -63.43%, sign-test p=0.03125.
+**rustock faster**: rustock faster in 6/6 cycles, median -61.30%, sign-test p=0.03125.
 
 | cycle | client | blocks mined | qualifying | txs | gas used | k6 success | cross replay | counts |
 |---|---|---|---|---|---|---|---|---|
-| 1 | rskj | 110 | 92 | 11354 | 2,688,061,588 | 100.00% | ok | yes |
-| 1 | rustock | 119 | 100 | 11274 | 2,778,522,881 | 100.00% | ok | yes |
-| 2 | rskj | 115 | 97 | 10153 | 2,810,822,554 | 100.00% | ok | yes |
-| 2 | rustock | 117 | 98 | 11303 | 2,732,105,875 | 100.00% | ok | yes |
-| 3 | rskj | 122 | 104 | 11149 | 2,958,880,813 | 100.00% | ok | yes |
-| 3 | rustock | 110 | 91 | 10135 | 2,539,061,070 | 100.00% | ok | yes |
-| 4 | rskj | 129 | 111 | 11772 | 3,133,124,419 | 100.00% | ok | yes |
-| 4 | rustock | 123 | 104 | 9859 | 2,845,336,109 | 100.00% | ok | yes |
-| 5 | rskj | 138 | 120 | 14687 | 3,384,863,044 | 100.00% | ok | yes |
-| 5 | rustock | 111 | 92 | 10366 | 2,589,628,751 | 100.00% | ok | yes |
-| 6 | rskj | 116 | 98 | 11038 | 2,833,173,180 | 100.00% | ok | yes |
-| 6 | rustock | 106 | 87 | 9378 | 2,444,544,012 | 100.00% | ok | yes |
+| 1 | rskj | 110 | 62 | 11354 | 2,688,061,588 | 100.00% | ok | yes |
+| 1 | rustock | 119 | 70 | 11274 | 2,778,522,881 | 100.00% | ok | yes |
+| 2 | rskj | 115 | 67 | 10153 | 2,810,822,554 | 100.00% | ok | yes |
+| 2 | rustock | 117 | 68 | 11303 | 2,732,105,875 | 100.00% | ok | yes |
+| 3 | rskj | 122 | 74 | 11149 | 2,958,880,813 | 100.00% | ok | yes |
+| 3 | rustock | 110 | 61 | 10135 | 2,539,061,070 | 100.00% | ok | yes |
+| 4 | rskj | 129 | 81 | 11772 | 3,133,124,419 | 100.00% | ok | yes |
+| 4 | rustock | 123 | 74 | 9859 | 2,845,336,109 | 100.00% | ok | yes |
+| 5 | rskj | 138 | 90 | 14687 | 3,384,863,044 | 100.00% | ok | yes |
+| 5 | rustock | 111 | 62 | 10366 | 2,589,628,751 | 100.00% | ok | yes |
+| 6 | rskj | 116 | 68 | 11038 | 2,833,173,180 | 100.00% | ok | yes |
+| 6 | rustock | 106 | 57 | 9378 | 2,444,544,012 | 100.00% | ok | yes |
 
 | statistic | rustock vs RSKj | rustock faster | p | per cycle |
 |---|---|---|---|---|
-| trimmed mean | 2.73x faster | 6/6 | 0.0312 | 2.84x faster, 2.63x faster, 2.43x faster, 2.79x faster, 2.82x faster, 2.68x faster |
-| mean | 2.47x faster | 6/6 | 0.0312 | 2.51x faster, 2.35x faster, 1.95x faster, 2.46x faster, 2.63x faster, 2.47x faster |
-| median | 2.60x faster | 6/6 | 0.0312 | 2.56x faster, 2.58x faster, 2.54x faster, 2.83x faster, 2.75x faster, 2.61x faster |
+| trimmed mean | 2.58x faster | 6/6 | 0.0312 | 2.59x faster, 2.52x faster, 2.28x faster, 2.58x faster, 2.78x faster, 2.59x faster |
+| mean | 2.18x faster | 6/6 | 0.0312 | 2.19x faster, 2.18x faster, 1.83x faster, 2.18x faster, 2.68x faster, 2.39x faster |
+| median | 2.55x faster | 6/6 | 0.0312 | 2.49x faster, 2.50x faster, 2.52x faster, 2.75x faster, 2.79x faster, 2.58x faster |
 
 Per-block milliseconds, trimmed mean, mean over runs (a phase one client does not log shows n/a; same-named phases are compared in the last column):
 
 | phase | RSKj | rustock | rustock vs RSKj (paired median) |
 |---|---|---|---|
-| totalMs | 251.5 | 93.4 | 2.73x faster |
-| executeMs | 226.6 | 90.7 | 2.51x faster (6/6) |
-| extendAlternativeChainMs | 1.0 | n/a |  |
-| initialValidationMs | 5.9 | 0.1 | 40.82x faster (6/6) |
-| onBestBlockMs | 0.1 | 0.2 | 1.68x slower (0/6) |
+| totalMs | 236.9 | 92.9 | 2.58x faster |
+| executeMs | 218.2 | 89.6 | 2.46x faster (6/6) |
+| extendAlternativeChainMs | 1.2 | n/a |  |
+| initialValidationMs | 7.3 | 0.2 | 36.36x faster (6/6) |
+| onBestBlockMs | 0.1 | 0.2 | 1.57x slower (0/6) |
 | onBlockMs | 0.0 | n/a |  |
 | postExecuteValidationMs | 0.0 | 0.0 |  |
-| preambleMs | 2.6 | 0.0 | 112.36x faster (6/6) |
+| preambleMs | 2.7 | 0.0 | 95.24x faster (6/6) |
 | processBestMs | 0.0 | n/a |  |
-| saveReceiptsMs | 10.4 | 0.9 | 7.68x faster (6/6) |
+| saveReceiptsMs | 3.8 | 1.2 | 3.15x faster (6/6) |
 | statePersistMs | 0.1 | n/a |  |
 | stateRootRegisterMs | 0.0 | n/a |  |
-| switchChainMs | 0.7 | 0.5 | 1.59x faster (4/6) |
+| switchChainMs | 0.8 | 0.6 | 1.40x faster (4/6) |
 | trieSaveMs | n/a | 0.8 |  |
-| txExecutionMs | 224.6 | n/a |  |
+| txExecutionMs | 216.4 | n/a |  |

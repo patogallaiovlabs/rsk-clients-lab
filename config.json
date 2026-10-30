@@ -97,7 +97,7 @@
     "cpus": 2,
     "memory": "6g",
     "mainnet_memory": "10g",
-    "min_block": 20,
+    "min_block": 50,
     "min_qualifying_blocks": 20,
     "k6_success_metric": {
       "14": "tx_success_rate",
