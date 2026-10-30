@@ -30,3 +30,12 @@ limit in `GasLimitRuleTests`.
 
 Take the bound from the chain configuration (60, 540, 0 with rskj's meaning of zero) and
 drop the unused field or use it; set `min_gas_limit` to 3,000,000. Port the three rskj tests.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate`.
+`HeaderVerifier::default_rsk` reads `ChainConfig.max_future_block_time`, now 60 on mainnet, 540
+on testnet, 0 on regtest, and `TimestampRule` treats zero as rskj does: the rule is off, parent
+comparison included. `min_gas_limit` is 3,000,000 on all three networks (rskj's regtest genesis
+declares 10,000,000, so nothing rskj accepts is lost). Tests ported: the nine remaining
+`BlockTimeStampValidationRuleTest` cases and the three `GasLimitRuleTests`.
