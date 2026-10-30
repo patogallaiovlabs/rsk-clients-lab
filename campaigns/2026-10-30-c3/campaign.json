@@ -1,0 +1,27 @@
+{
+ "id": "2026-10-30-c3",
+ "dir": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/campaigns/2026-10-30-c3",
+ "status": "running",
+ "queued_at": "2026-10-30T22:18:29Z",
+ "queued_epoch": 1793398709,
+ "kind": "live",
+ "where": [
+  "docker"
+ ],
+ "scenarios": [
+  "mainnet-sim@mainnet"
+ ],
+ "clients": [
+  "rskj",
+  "rustock"
+ ],
+ "cycles": 6,
+ "max_cycles": 12,
+ "refs": {
+  "rskj": "perf-lab/integration",
+  "rustock": "clients-lab/comparison"
+ },
+ "note": "mainnet-sim live on the mainnet seed, rerun of 2026-10-29-c3 with rustock 6712f28 (miner packs by gas used, RSKIP252 cap, eth_gasPrice gated on the fee market), gated by 2026-10-30-c1. k6 suite 57c00ac with the recompiled ERC-20 bytecode.",
+ "results": {},
+ "started_at": "2026-10-30T22:18:36Z"
+}
