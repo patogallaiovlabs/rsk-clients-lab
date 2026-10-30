@@ -28,3 +28,19 @@ In the executor's mining mode, treat a pre-execution `EVMError::Transaction` as 
 invalid transaction: drop it, drop the sender's later ones, report the indices; give the
 template builder a way to tell the pool, and remove them. Gate `build_work` on the sync
 service reporting no better block to fetch. Port the three rskj tests.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate`. The
+executor's mining mode drops a transaction the EVM refuses before running it (any error but a
+database one), with the sender's later ones, and reports it apart from those that did not fit
+(`MiningDrops`); the template builder maps the refused ones back to their hashes and calls the
+new `PendingTransactionSource::remove_invalid`, which the node's pool answers with
+`TransactionPool::remove_by_hashes`. What did not fit stays in the pool, as in rskj.
+`MinerServer::with_sync_gate` takes a `SyncGate`; `build_work` answers `Syncing` while it says
+there is a better block to sync, so neither the timed miner nor a merged miner gets work. The
+node's gate is rskj's `hasBetterBlockToSync`: a peer's announced height at least 24 past the
+executed head (`sync.longSyncLimit`). Tests ported: the two `BlockToMineBuilderEvictionEndToEndTest`
+cases, the two `BlockToMineBuilderInvalidTxEvictionTest` cases,
+`MinerManagerTest.mineBlockWhileSyncingBlocks`, plus one that an unfitting transaction is not
+evicted and a pool test for `remove_by_hashes`.
