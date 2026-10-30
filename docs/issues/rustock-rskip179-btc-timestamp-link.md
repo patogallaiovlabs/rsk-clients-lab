@@ -32,3 +32,15 @@ Add the check to the header rules from the RSKIP179 height (iris300 on mainnet, 
 testnet widening under RSKIP297): decode the merged-mining header, take its time, compare
 with the RSK timestamp, strict inequality as rskj has it. Port
 `BlockTimeStampValidationRuleTest.timestampsAreCloseEnough` and its missing-header case.
+
+## Status
+
+Fixed on 2026-10-30, rustock branch `fix/miner-gas-packing-cap-and-gasprice-gate`.
+`BitcoinTimestampRule` in `crates/core/src/validation/merged_mining.rs`, in
+`HeaderVerifier::default_rsk` after the merged-mining rule: from iris300 on, a header without a
+decodable Bitcoin header is invalid, and the two timestamps must differ by less than 300 s, or
+7200 s on testnet from hop400 (`ActivationHeights.hop400`, new). The miner runs the same rule on
+a submitted block before importing it, and the in-process miner now stamps its Bitcoin header
+from the clock instead of zero, which the rule would otherwise reject on regtest. Tests ported:
+rskj's `timestampsAreCloseEnough` as `timestamps_are_close_enough`, plus the missing-header,
+pre-activation and testnet-widening cases.
