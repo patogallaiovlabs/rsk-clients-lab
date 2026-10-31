@@ -88,8 +88,12 @@ def queue(a):
 
 def resolve(c):
     """Pin both clients to commits and build what the campaign's machines need."""
-    shas = {}
+    # A campaign pins its commits once, at its first start: a rerun after an interruption
+    # measures the same builds as the cycles already on disk, even if a branch moved since.
+    shas = dict(c.get("shas") or {})
     for name, ref in c["refs"].items():
+        if shas.get(name):
+            continue
         repo = os.path.join(LAB, "clients", name)
         sh(["git", "-C", repo, "fetch", "-q", "--all"], check=False)
         shas[name] = sh(["git", "-C", repo, "rev-parse", "--verify", f"{ref}^{{commit}}"]).stdout.strip()
