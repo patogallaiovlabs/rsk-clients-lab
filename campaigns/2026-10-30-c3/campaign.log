@@ -1,0 +1,29 @@
+[2026-10-30T22:22:08Z] rskj e507f4503, rustock 2f185c8fe
+[2026-10-30T22:53:27Z] live mainnet-sim@mainnet c1-rskj: blocks 9003568..9003702 in 1841 s
+[2026-10-30T23:26:15Z] live mainnet-sim@mainnet c1-rustock: blocks 9003568..9003697 in 1954 s
+[2026-10-30T23:27:15Z] live mainnet-sim@mainnet c1-rskj: 135 blocks mined, 87 qualifying, k6 100.0%, cross replay ok
+[2026-10-30T23:27:15Z] live mainnet-sim@mainnet c1-rustock: 130 blocks mined, 81 qualifying, k6 99.99%, cross replay ok
+[2026-10-31T00:01:46Z] live mainnet-sim@mainnet c2-rustock: blocks 9003568..9003689 in 1949 s
+[2026-10-31T00:33:09Z] live mainnet-sim@mainnet c2-rskj: blocks 9003568..9003690 in 1841 s
+[2026-10-31T00:34:21Z] live mainnet-sim@mainnet c2-rustock: 122 blocks mined, 72 qualifying, k6 99.99%, cross replay ok
+[2026-10-31T00:34:21Z] live mainnet-sim@mainnet c2-rskj: 123 blocks mined, 75 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T01:40:37Z] live mainnet-sim@mainnet c3-rskj: blocks 9003568..9003692 in 1835 s
+[2026-10-31T02:13:19Z] live mainnet-sim@mainnet c3-rustock: blocks 9003568..9003690 in 1949 s
+[2026-10-31T02:14:26Z] live mainnet-sim@mainnet c3-rskj: 125 blocks mined, 77 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T02:14:26Z] live mainnet-sim@mainnet c3-rustock: 123 blocks mined, 73 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T15:02:56Z] live mainnet-sim@mainnet c4-rustock: blocks 9003568..9003693 in 1949 s
+[2026-10-31T15:27:57Z] rskj e507f4503, rustock 2f185c8fe
+[2026-10-31T15:30:24Z] rskj e507f4503, rustock 6712f28f9
+[2026-10-31T16:03:00Z] live mainnet-sim@mainnet c4-rustock: blocks 9003568..9003697 in 1948 s
+[2026-10-31T16:33:48Z] live mainnet-sim@mainnet c4-rskj: blocks 9003568..9003682 in 1835 s
+[2026-10-31T16:34:10Z] live mainnet-sim@mainnet c4-rustock: 130 blocks mined, 81 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T16:34:10Z] live mainnet-sim@mainnet c4-rskj: 115 blocks mined, 67 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T17:05:01Z] live mainnet-sim@mainnet c5-rskj: blocks 9003568..9003714 in 1839 s
+[2026-10-31T17:37:44Z] live mainnet-sim@mainnet c5-rustock: blocks 9003568..9003682 in 1954 s
+[2026-10-31T17:39:03Z] live mainnet-sim@mainnet c5-rskj: 147 blocks mined, 99 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T17:39:04Z] live mainnet-sim@mainnet c5-rustock: 115 blocks mined, 66 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T18:11:44Z] live mainnet-sim@mainnet c6-rustock: blocks 9003568..9003699 in 1949 s
+[2026-10-31T18:43:37Z] live mainnet-sim@mainnet c6-rskj: blocks 9003568..9003687 in 1842 s
+[2026-10-31T18:44:26Z] live mainnet-sim@mainnet c6-rustock: 132 blocks mined, 83 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T18:44:26Z] live mainnet-sim@mainnet c6-rskj: 120 blocks mined, 72 qualifying, k6 100.0%, cross replay ok
+[2026-10-31T18:44:26Z] docker mainnet-sim@mainnet after 6 cycles: rustock slower (rustock faster in 0/6 cycles, median +73.15%, sign-test p=0.03125)
