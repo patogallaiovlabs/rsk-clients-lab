@@ -10,7 +10,7 @@
       "blocks": "samples/mainnet-sim/blocks.txt.gz",
       "reference_hashes": "samples/mainnet-sim/reference_hashes.txt",
       "first_block": 1,
-      "last_block": 1159,
+      "last_block": 970,
       "threshold": 0.9,
       "min_difference_pct": 2.0,
       "k6_option": 14

@@ -1,13 +1,13 @@
 {
   "name": "mainnet-sim",
-  "blocks": 1159,
+  "blocks": 970,
   "first_block": 1,
-  "last_block": 1159,
-  "blocks_sha256": "68fe4863146e9193f578db595e63ecb45f18e2c36cb1233b8dbb1af26f5c0b52",
+  "last_block": 970,
+  "blocks_sha256": "1ddf5c35f9a04f8b890de63b3e7a7f874333c6fcf34e7b58ce51b6ff52ae1e26",
   "source": {
-    "seed": "seed-genesis-block1-1159.tar.gz",
-    "blocks": "blocks_2_to_1159.txt.gz",
-    "block1_exported_with": "rskj-e507f45031cf0e8a71bf571fcdbfbe9aa529a21b.jar"
+    "seed": "seed-genesis-block1.tar.gz",
+    "blocks": "blocks.txt.gz",
+    "block1_exported_with": "rskj-fa5733f8eb9a9b733fa55c6b6326c1bf01e50a93.jar"
   },
-  "imported": "2026-10-26T19:55:17Z"
+  "imported": "2026-11-02T21:25:58Z"
 }

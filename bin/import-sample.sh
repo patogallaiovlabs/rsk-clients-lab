@@ -43,4 +43,8 @@ jq -n --arg name "$NAME" --argjson blocks "$N" --arg sha "$(shasum -a 256 "$OUT/
   --arg at "$(date -u +%FT%TZ)" \
   '{name:$name, blocks:$blocks, first_block:1, last_block:$blocks, blocks_sha256:$sha,
     source:{seed:$seed, blocks:$src, block1_exported_with:$jar}, imported:$at}' > "$OUT/meta.json"
+# Record the block range in config.json so replay-docker.sh and check-run.sh know it
+# (a re-imported sample has a new length; 2026-11-02-c1 failed "consensus" on the old one).
+jq --arg s "$NAME" --argjson t "$N" '.scenarios[$s].first_block = 1 | .scenarios[$s].last_block = $t' \
+  "$LAB/config.json" > "$LAB/config.json.tmp" && mv "$LAB/config.json.tmp" "$LAB/config.json"
 log "sample $NAME: blocks 1..$N, block 1 $(cut -d, -f2 "$TMP/block1.txt" | cut -c1-12)"
