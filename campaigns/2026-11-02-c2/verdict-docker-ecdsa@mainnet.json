@@ -1,0 +1,117 @@
+{
+ "where": "docker",
+ "scenario": "ecdsa@mainnet",
+ "cycles": 6,
+ "verdict": "rustock faster",
+ "why": "rustock faster in 6/6 cycles, median -27.34%, sign-test p=0.03125",
+ "totalMs": {
+  "tmean": {
+   "median_pct": -27.34,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -28.9,
+    -32.48,
+    -27.97,
+    -23.57,
+    -26.71,
+    -24.21
+   ]
+  },
+  "mean": {
+   "median_pct": -18.94,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -24.89,
+    -31.48,
+    -18.66,
+    -16.41,
+    -19.22,
+    -13.24
+   ]
+  },
+  "median": {
+   "median_pct": -26.16,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125,
+   "deltas_pct": [
+    -26.57,
+    -31.8,
+    -26.53,
+    -23.67,
+    -25.78,
+    -25.06
+   ]
+  }
+ },
+ "phases": {
+  "executeMs": {
+   "median_pct": -18.35,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "initialValidationMs": {
+   "median_pct": -95.5,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "onBestBlockMs": {
+   "median_pct": 31.99,
+   "rustock_faster": 0,
+   "n": 6,
+   "p": 0.03125
+  },
+  "preambleMs": {
+   "median_pct": -92.43,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "saveReceiptsMs": {
+   "median_pct": -65.48,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  },
+  "switchChainMs": {
+   "median_pct": -69.67,
+   "rustock_faster": 6,
+   "n": 6,
+   "p": 0.03125
+  }
+ },
+ "absolute_ms": {
+  "rskj": {
+   "executeMs": 105.0,
+   "initialValidationMs": 4.288,
+   "onBestBlockMs": 0.132,
+   "onBlockMs": 0.0,
+   "postExecuteValidationMs": 0.0,
+   "preambleMs": 3.082,
+   "processBestMs": 0.0,
+   "saveReceiptsMs": 2.847,
+   "statePersistMs": 0.003,
+   "stateRootRegisterMs": 0.0,
+   "switchChainMs": 0.86,
+   "totalMs": 120.835,
+   "txExecutionMs": 103.584
+  },
+  "rustock": {
+   "executeMs": 85.192,
+   "initialValidationMs": 0.19,
+   "onBestBlockMs": 0.171,
+   "postExecuteValidationMs": 0.001,
+   "preambleMs": 0.186,
+   "saveReceiptsMs": 0.906,
+   "switchChainMs": 0.282,
+   "totalMs": 87.799,
+   "trieSaveMs": 0.642
+  }
+ }
+}

@@ -1,0 +1,26 @@
+[2026-11-02T21:42:33Z] rskj fa5733f8e, rustock 2f185c8fe
+[2026-11-02T22:13:23Z] live ecdsa@mainnet c1-rskj: blocks 9003568..9003691 in 1835 s
+[2026-11-02T22:45:57Z] live ecdsa@mainnet c1-rustock: blocks 9003568..9003679 in 1948 s
+[2026-11-02T22:47:49Z] live ecdsa@mainnet c1-rskj: 124 blocks mined, 76 qualifying, k6 100.0%, cross replay ok
+[2026-11-02T22:47:49Z] live ecdsa@mainnet c1-rustock: 112 blocks mined, 63 qualifying, k6 100.0%, cross replay ok
+[2026-11-02T23:20:28Z] live ecdsa@mainnet c2-rustock: blocks 9003568..9003676 in 1949 s
+[2026-11-02T23:52:03Z] live ecdsa@mainnet c2-rskj: blocks 9003568..9003683 in 1841 s
+[2026-11-02T23:52:50Z] live ecdsa@mainnet c2-rustock: 109 blocks mined, 60 qualifying, k6 100.0%, cross replay ok
+[2026-11-02T23:52:50Z] live ecdsa@mainnet c2-rskj: 116 blocks mined, 68 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T00:23:33Z] live ecdsa@mainnet c3-rskj: blocks 9003568..9003691 in 1834 s
+[2026-11-03T00:56:11Z] live ecdsa@mainnet c3-rustock: blocks 9003568..9003683 in 1949 s
+[2026-11-03T00:58:00Z] live ecdsa@mainnet c3-rskj: 124 blocks mined, 76 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T00:58:01Z] live ecdsa@mainnet c3-rustock: 116 blocks mined, 67 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T01:30:38Z] live ecdsa@mainnet c4-rustock: blocks 9003568..9003673 in 1949 s
+[2026-11-03T02:02:13Z] live ecdsa@mainnet c4-rskj: blocks 9003568..9003678 in 1841 s
+[2026-11-03T02:03:08Z] live ecdsa@mainnet c4-rustock: 106 blocks mined, 56 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T02:03:08Z] live ecdsa@mainnet c4-rskj: 111 blocks mined, 63 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T02:33:53Z] live ecdsa@mainnet c5-rskj: blocks 9003568..9003697 in 1835 s
+[2026-11-03T03:06:31Z] live ecdsa@mainnet c5-rustock: blocks 9003568..9003687 in 1949 s
+[2026-11-03T03:08:08Z] live ecdsa@mainnet c5-rskj: 130 blocks mined, 82 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T03:08:08Z] live ecdsa@mainnet c5-rustock: 120 blocks mined, 71 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T03:40:44Z] live ecdsa@mainnet c6-rustock: blocks 9003568..9003681 in 1948 s
+[2026-11-03T04:12:20Z] live ecdsa@mainnet c6-rskj: blocks 9003568..9003697 in 1838 s
+[2026-11-03T04:12:58Z] live ecdsa@mainnet c6-rustock: 114 blocks mined, 64 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T04:12:58Z] live ecdsa@mainnet c6-rskj: 130 blocks mined, 82 qualifying, k6 100.0%, cross replay ok
+[2026-11-03T04:12:58Z] docker ecdsa@mainnet after 6 cycles: rustock faster (rustock faster in 6/6 cycles, median -27.34%, sign-test p=0.03125)
