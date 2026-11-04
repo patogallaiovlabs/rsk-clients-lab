@@ -34,11 +34,13 @@ def ratio(delta_pct, short=False):
 def arm_table(raw):
     """Per live arm: what it mined, what k6 saw, whether the cross replay passed."""
     rows = []
-    for p in sorted(glob.glob(os.path.join(raw, "c*-*", "consensus.json")),
-                    key=lambda x: (int(os.path.basename(os.path.dirname(x))[1:].split("-")[0]), x)):
+    # Docker: raw/<scen>/c<k>-<client>/; Boton: raw/<scen>/c<k>-<fwd|rev>/<A|B>/.
+    paths = glob.glob(os.path.join(raw, "c*-*", "consensus.json")) + glob.glob(os.path.join(raw, "c*-*", "[AB]", "consensus.json"))
+    for p in sorted(paths, key=lambda x: (int(os.path.relpath(x, raw).split(os.sep)[0][1:].split("-")[0]), x)):
         k = json.load(open(p))
-        name = os.path.basename(os.path.dirname(p))
-        cycle, client = name[1:].split("-", 1)
+        parts = os.path.relpath(p, raw).split(os.sep)
+        cycle, tail = parts[0][1:].split("-", 1)
+        client = tail if len(parts) == 2 else f"{k.get('client')} ({tail}, box {parts[1]})"
         cross = k.get("cross_replay")
         cross_s = "ok" if k.get("checks", {}).get("cross_replay") else \
             ("not run" if cross == "not run" else f"FAILED at {cross.get('first_difference') or '?'}" if isinstance(cross, dict) else "n/a")
@@ -86,6 +88,12 @@ def main(cid):
               + (", pricing every transaction at the head block's minimumGasPrice times 1.1 on both arms "
                  "(`live.k6_gas_price`)" if lv.get("k6_gas_price") == "head-minimum-x1.1" else "")
               + ".", ""]
+        if "boton" in c["where"]:
+            L += ["Boton: the two boxes mine at the same time, one client each, natively from an empty "
+                  "database (`bin/boton-live-slot.sh`): the fwd slot runs RSKj on box A and rustock on box B, "
+                  "the rev slot swaps them, and a cycle is one of each. k6 runs on the box against its own "
+                  "node, with the same options and pricing rule as in Docker; the cross replays run in Docker "
+                  "on this Mac. A cycle's figure is the mean of the two boxes' within-box comparisons.", ""]
     else:
         mainnet = any(cfg.get("scenarios", {}).get(s, {}).get("db") == "mainnet" for s in c["scenarios"])
         start = ("a hard-link clone of the mainnet seed (`docs/mainnet-db-plan.md`)" if mainnet

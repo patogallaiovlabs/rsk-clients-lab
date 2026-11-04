@@ -7,7 +7,7 @@ preceded the lab's; where a claim is an inference rather than something read, th
 so. The sections after them record what the runs found, latest last. What the design
 settled on: the adapter branches `harness/timed-mining`, `harness/mined-block-timing`,
 `harness/export-blocks`, `harness/mined-header-version` and `harness/account-slots`, all on
-`clients-lab/harness`; 2 CPUs per container; no Boton live slot; and, since 2026-10-29, k6
+`clients-lab/harness`; 2 CPUs per container; a Boton live slot since 2026-11-04 (empty database only); and, since 2026-10-29, k6
 pricing by the head minimum times 1.1 on both arms rather than by each node's `eth_gasPrice`.
 
 The replay campaigns feed both clients the same blocks. A live campaign has each client mine
@@ -202,9 +202,16 @@ Machines:
   for the small chain and 10 GB on the mainnet seed, as they do, so the numbers can be read
   beside theirs. k6 runs on the host against `localhost:4444`.
 - **Boton**: native binaries, counterbalanced as `bin/boton-campaign.sh` does: one slot RSKj
-  on A and rustock on B, the next swapped. k6 runs on the box (`run-load.sh`), so the boxes
-  need the k6 binary and Node, which the boxes' setup already installs. Small chain only
-  until the rustock seed is on the boxes (`docs/mainnet-db-plan.md` decided sequential there).
+  on A and rustock on B, the next swapped, both boxes mining at the same time
+  (`bin/boton-live-slot.sh`, 2026-11-04; `bin/boton-live-remote.sh` is the box's half). k6
+  runs on the box against its own node (the suite is uploaded to `~/clientslab/k6-tests`
+  and `npm install`ed there), so the boxes need the k6 binary and Node, which their setup
+  already installs. RSKj runs the runtime image's miner flags natively with the lab's
+  `rsk.conf`, RPC bound to the box; rustock runs `live_args` with the box's paths. The
+  arm's output has the shape of a Docker arm, so the cross replay (in Docker on this Mac)
+  and `bin/check-live-arm.sh` are the same. Small chain only: the boxes hold no rustock
+  seed beside the RSKj one (295 GB volume, 186 + 149 GB), so the `@mainnet` scenarios would
+  need the sequential design of `docs/mainnet-db-plan.md` with a seed swap per box.
 
 Chains, in order:
 
@@ -235,8 +242,8 @@ Scripts the lab needs:
 - `bin/lab.py`: a `--kind live` on `queue`, a `run_live` beside `run_docker` with the same
   cycle loop and lock handling (an arm holds the Docker slot as a long holder for 35 to 45
   minutes), and the cross replay called between arms.
-- `bin/boton-campaign.sh`: a live slot beside the replay slot, deploying the k6 suite as
-  `run-load.sh` does.
+- `bin/boton-live-slot.sh` and `bin/boton-live-remote.sh`: the live slot beside the replay
+  slot, deploying the k6 suite as `run-load.sh` does (written 2026-11-04).
 - `clients/rustock.json`: `live_args` beside `import_args`; a `conf/rustock-wallet.keys`
   copied from the fork's example file.
 - `bin/report.py`: the live sections, with the k6 success rate and the cross-replay result

@@ -12,9 +12,11 @@ bin/lab.py status [<id>]
 
 - Defaults: RSKj at the ref in `clients/rskj.json`, rustock at `clients-lab/comparison`, 6 cycles (up to
   12 while undecided). Override with `--rskj`, `--rustock`, `--cycles`, and say why in `--note`.
-- `--kind live`: live mining instead of replay (README "Live mining"). Docker only; each cycle is
+- `--kind live`: live mining instead of replay (README "Live mining"). In Docker each cycle is
   one 30-minute arm per client plus the cross replays, about 65 minutes per cycle, seven hours
-  for six (`--scenarios mainnet-sim@mainnet,ecdsa@mainnet` for the mainnet seed).
+  for six (`--scenarios mainnet-sim@mainnet,ecdsa@mainnet` for the mainnet seed). On Boton
+  (`--where boton`, empty-database scenarios only) a cycle is two 30-minute slots with both
+  boxes mining at once plus four cross replays here, about 80 minutes per cycle.
   Needs the rustock adapter's live flags (`clients/rustock.json` `live_args`) and the k6 suite at
   `config.json` `mainnet_seed.k6`. A `status: failed` saying "live arm discarded" is an arm that
   measured nothing (few full blocks, k6 rejected); rerun `bin/lab.py run <id>` to repeat the cycle.

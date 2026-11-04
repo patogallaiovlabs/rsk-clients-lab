@@ -92,7 +92,10 @@ with blocks mined, qualifying blocks, transactions, k6 success rate and the cros
 result, since the two arms of a cycle mine different blocks. k6 prices every transaction at
 the head block's `minimumGasPrice` times 1.1 on both arms (`live.k6_gas_price`), the rule
 RSKj's own `eth_gasPrice` applies, so the two nodes' gas price answers do not shape the load.
-There is no Boton live slot; live campaigns run on this Mac only.
+On Boton (`--where boton`) a live cycle is two slots of `bin/boton-live-slot.sh`: both
+boxes mine at the same time, one client each, natively from an empty database with k6 on
+the box, then swapped; the cross replays run in Docker here. Empty-database scenarios only:
+the boxes' 295 GB volumes hold the RSKj seed and have no room for rustock's beside it.
 
 The mainnet seed (`docs/mainnet-db-plan.md`): an RSKj mainnet database with the k6 senders
 funded, in the Docker volume `config.json` names, and rustock's conversion of it beside it.
@@ -156,8 +159,8 @@ Yellow: a script runs it. Purple: a script decides. Blue: a Claude agent
 finding, which is never timed. Dotted: a way back or out. `bin/lab.py` drives every step;
 one cycle holds the machine's lock from its first run to its last check, so another lab's
 short jobs may run between cycles but never inside one. On Boton the replay cycle is a slot:
-RSKj on box A and rustock on box B, the next slot swapped (`bin/boton-campaign.sh`); live
-cycles run on this Mac only.
+RSKj on box A and rustock on box B, the next slot swapped (`bin/boton-campaign.sh` for
+replay, `bin/boton-live-slot.sh` for live mining, which holds the box locks per slot).
 
 ## The rustock adapter
 

@@ -13,10 +13,12 @@ max_cycles is reached (bin/stats.py). Every run is checked against the reference
 run that fails the check stops the campaign as a consensus finding, since timing a client
 that computed something else means nothing.
 
-A live campaign (--kind live, Docker only for now) replaces the replay with bin/live-arm.sh:
-each client mines its own blocks under k6 load for live.arm_minutes, the cycle then replays
-each arm's blocks into the other client (the cross replay) and bin/check-live-arm.sh decides
-whether the arm counts. The cycle loop, the lock handling and the verdict are the same.
+A live campaign (--kind live) replaces the replay with bin/live-arm.sh: each client mines
+its own blocks under k6 load for live.arm_minutes, the cycle then replays each arm's blocks
+into the other client (the cross replay, in Docker on this Mac) and bin/check-live-arm.sh
+decides whether the arm counts. The cycle loop, the lock handling and the verdict are the
+same. On Boton (--where boton, empty-database scenarios only) a cycle is two slots of
+bin/boton-live-slot.sh: both boxes mine at once, one client each, then swapped.
 """
 import argparse, datetime as dt, glob, json, os, subprocess, sys, time
 
@@ -79,8 +81,9 @@ def queue(a):
             sys.exit(f"unknown scenario {s}")
         if a.kind == "live" and CFG["scenarios"][s].get("k6_option") is None:
             sys.exit(f"scenario {s} has no k6_option; a live campaign needs one")
-    if a.kind == "live" and c["where"] != ["docker"]:
-        sys.exit("live campaigns run in Docker on this Mac only; the Boton live slot is a later step")
+        if a.kind == "live" and "boton" in c["where"] and CFG["scenarios"][s].get("db", "empty") != "empty":
+            sys.exit(f"scenario {s} runs on the mainnet seed; the Boton boxes hold no rustock seed beside the RSKj one, "
+                     "so only empty-database scenarios run live there")
     save(c)
     open(os.path.join(QUEUE, cid), "w").close()
     print(cid)
@@ -100,7 +103,8 @@ def resolve(c):
     c["shas"] = shas
     c["builds"] = {"rskj": sh([os.path.join(BIN, "build-client.sh"), "rskj", shas["rskj"]]).stdout.strip().splitlines()[-1]}
     # Release and Docker builds of rustock are heavy: run them in the shared Docker slot.
-    if "docker" in c["where"] and "rustock" in c.get("clients", ["rskj", "rustock"]):
+    # A live campaign cross-replays every arm in Docker here, wherever the arm ran.
+    if ("docker" in c["where"] or c.get("kind", "replay") == "live") and "rustock" in c.get("clients", ["rskj", "rustock"]):
         sh([os.path.join(BIN, "with-lock.sh"), os.path.join(BIN, "build-client.sh"), "rustock", shas["rustock"], "linux-arm64"])
         c["builds"]["rustock-docker"] = f"clientslab-rustock:{shas['rustock'][:12]}-linux-arm64"
     if "boton" in c["where"]:
@@ -237,6 +241,78 @@ def cycle(cid, scen, k, order):
         sys.exit(4)
 
 
+BOTON_SLOTS = (("fwd", ("rskj", "rustock")), ("rev", ("rustock", "rskj")))  # (box A, box B)
+
+
+def run_boton_live(c, scen):
+    """The Boton cycles of one live scenario: per cycle a fwd and a rev slot, each slot both
+    boxes mining at once (bin/boton-live-slot.sh, which holds the box locks), then the two
+    arms' cross replays and checks in Docker here. A slot with an arm that measured nothing
+    is repeated, up to three attempts; a cross replay that fails stops the campaign."""
+    d = os.path.join(c["dir"], "raw", "boton", scen)
+    os.makedirs(d, exist_ok=True)
+    k = 0
+    while True:
+        k += 1
+        if k > c["max_cycles"]:
+            break
+        for slot, (ca, cb) in BOTON_SLOTS:
+            sd = os.path.join(d, f"c{k}-{slot}")
+            if all(stats.per_block(os.path.join(sd, box)) for box in ("A", "B")):
+                continue
+            for attempt in range(1, 4):
+                if os.path.isdir(sd):
+                    sh(["rm", "-rf", sd])
+                with open(os.path.join(d, f"c{k}-{slot}.log"), "a") as f:
+                    r = subprocess.run([os.path.join(BIN, "boton-live-slot.sh"), c["id"], scen, sd, ca, cb],
+                                       stdout=f, stderr=subprocess.STDOUT,
+                                       env=dict(os.environ, CLIENTSLAB_PRIORITY=str(c["queued_epoch"])))
+                if r.returncode != 0:
+                    tail = sh(["tail", "-n", "5", os.path.join(d, f"c{k}-{slot}.log")], check=False).stdout
+                    raise RuntimeError(f"boton live slot c{k}-{slot} of {scen} failed (exit {r.returncode}):\n{tail}")
+                cmd = f'. "{BIN}/lib.sh"; lock_acquire docker "long:$CLIENTSLAB_PRIORITY"; trap "lock_release docker" EXIT; ' \
+                      f'"{sys.executable}" "{BIN}/lab.py" _boton_check "{c["id"]}" "{scen}" {k} {slot}'
+                r = subprocess.run(["bash", "-c", cmd], env=dict(os.environ, CLIENTSLAB_PRIORITY=str(c["queued_epoch"])))
+                if r.returncode == 3:
+                    raise ConsensusFailure(open(os.path.join(d, "consensus-failure.txt")).read())
+                if r.returncode == 4:
+                    log(f"boton live c{k}-{slot} of {scen}, attempt {attempt}: arm discarded, repeating the slot: "
+                        + open(os.path.join(d, "arm-discarded.txt")).read().strip(), c)
+                    continue
+                if r.returncode != 0:
+                    raise RuntimeError(f"boton live checks of c{k}-{slot} of {scen} failed (exit {r.returncode})")
+                break
+            else:
+                raise RuntimeError(f"boton live slot c{k}-{slot} of {scen} discarded three times; see arm-discarded.txt")
+        if k >= c["cycles"]:
+            v = stats.judge("boton", d, scen)
+            log(f"boton {scen} after {k} cycles: {v['verdict']} ({v['why']})", c)
+            if v["verdict"] != "extend":
+                break
+    return stats.judge("boton", d, scen)
+
+
+def boton_check(cid, scen, k, slot):
+    """Both arms of one Boton live slot: cross replay in Docker, then the checks. Called
+    under the Docker lock by run_boton_live; exit 3 on a consensus failure, 4 when an arm
+    measured nothing."""
+    c = load(cid)
+    d = os.path.join(c["dir"], "raw", "boton", scen)
+    sd = os.path.join(d, f"c{k}-{slot}")
+    clients = dict(BOTON_SLOTS)[slot]
+    try:
+        for box, client in zip(("A", "B"), clients):
+            cross_replay(c, client, scen, os.path.join(sd, box))
+        for box, client in zip(("A", "B"), clients):
+            check_live(c, client, scen, os.path.join(sd, box))
+    except ConsensusFailure as e:
+        open(os.path.join(d, "consensus-failure.txt"), "w").write(str(e))
+        sys.exit(3)
+    except ArmDiscarded as e:
+        open(os.path.join(d, "arm-discarded.txt"), "w").write(str(e))
+        sys.exit(4)
+
+
 def run(cid):
     c = load(cid)
     c["status"] = "running"
@@ -251,6 +327,9 @@ def run(cid):
             for scen in c["scenarios"]:
                 if where == "docker":
                     v = (run_live if c.get("kind", "replay") == "live" else run_docker)(c, scen)
+                elif c.get("kind", "replay") == "live":
+                    v = run_boton_live(c, scen)
+                    json.dump(v, open(os.path.join(c["dir"], f"verdict-boton-{scen}.json"), "w"), indent=1)
                 else:
                     v = sh([os.path.join(BIN, "boton-campaign.sh"), cid, scen], check=True) and \
                         stats.judge("boton", os.path.join(c["dir"], "raw", "boton", scen), scen)
@@ -297,6 +376,8 @@ def main():
     sp.add_parser("status").add_argument("id", nargs="?")
     cy = sp.add_parser("_cycle")
     cy.add_argument("id"); cy.add_argument("scen"); cy.add_argument("k", type=int); cy.add_argument("order", nargs="+")
+    bc = sp.add_parser("_boton_check")
+    bc.add_argument("id"); bc.add_argument("scen"); bc.add_argument("k", type=int); bc.add_argument("slot", choices=("fwd", "rev"))
     a = ap.parse_args()
     if a.cmd == "queue":
         queue(a)
@@ -312,6 +393,8 @@ def main():
         status(a.id)
     elif a.cmd == "_cycle":
         cycle(a.id, a.scen, a.k, a.order)
+    elif a.cmd == "_boton_check":
+        boton_check(a.id, a.scen, a.k, a.slot)
 
 
 if __name__ == "__main__":
