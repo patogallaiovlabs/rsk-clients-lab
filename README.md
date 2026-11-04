@@ -93,9 +93,11 @@ result, since the two arms of a cycle mine different blocks. k6 prices every tra
 the head block's `minimumGasPrice` times 1.1 on both arms (`live.k6_gas_price`), the rule
 RSKj's own `eth_gasPrice` applies, so the two nodes' gas price answers do not shape the load.
 On Boton (`--where boton`) a live cycle is two slots of `bin/boton-live-slot.sh`: both
-boxes mine at the same time, one client each, natively from an empty database with k6 on
-the box, then swapped; the cross replays run in Docker here. Empty-database scenarios only:
-the boxes' 295 GB volumes hold the RSKj seed and have no room for rustock's beside it.
+boxes mine at the same time, one client each, natively with k6 on the box, then swapped;
+the cross replays run in Docker here. On the mainnet seed the boxes' 295 GB volumes hold one
+client's seed at a time, so the campaign is sequential: every RSKj cycle (both boxes at once,
+each on a hard-link clone), the seed swap (`bin/boton-seed.sh <box> <client>`, most of a day),
+every rustock cycle; the report says so, and such a campaign is never extended.
 
 The mainnet seed (`docs/mainnet-db-plan.md`): an RSKj mainnet database with the k6 senders
 funded, in the Docker volume `config.json` names, and rustock's conversion of it beside it.

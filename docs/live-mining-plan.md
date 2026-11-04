@@ -7,7 +7,7 @@ preceded the lab's; where a claim is an inference rather than something read, th
 so. The sections after them record what the runs found, latest last. What the design
 settled on: the adapter branches `harness/timed-mining`, `harness/mined-block-timing`,
 `harness/export-blocks`, `harness/mined-header-version` and `harness/account-slots`, all on
-`clients-lab/harness`; 2 CPUs per container; a Boton live slot since 2026-11-04 (empty database only); and, since 2026-10-29, k6
+`clients-lab/harness`; 2 CPUs per container; a Boton live slot since 2026-11-04, sequential on the mainnet seed since 2026-11-05 (last section); and, since 2026-10-29, k6
 pricing by the head minimum times 1.1 on both arms rather than by each node's `eth_gasPrice`.
 
 The replay campaigns feed both clients the same blocks. A live campaign has each client mine
@@ -209,9 +209,13 @@ Machines:
   already installs. RSKj runs the runtime image's miner flags natively with the lab's
   `rsk.conf`, RPC bound to the box; rustock runs `live_args` with the box's paths. The
   arm's output has the shape of a Docker arm, so the cross replay (in Docker on this Mac)
-  and `bin/check-live-arm.sh` are the same. Small chain only: the boxes hold no rustock
-  seed beside the RSKj one (295 GB volume, 186 + 149 GB), so the `@mainnet` scenarios would
-  need the sequential design of `docs/mainnet-db-plan.md` with a seed swap per box.
+  and `bin/check-live-arm.sh` are the same. On the mainnet seed the boxes hold one
+  client's seed at a time (295 GB volume, 186 + 149 GB), so the `@mainnet` scenarios run the
+  sequential design of `docs/mainnet-db-plan.md`: every RSKj cycle with both boxes mining
+  RSKj at once, each from a hard-link clone of the seed on the box's volume; the seed swap
+  (`bin/boton-seed.sh`); every rustock cycle. The arms land in the same fwd/rev layout
+  (RSKj to fwd/A and rev/B, rustock to rev/A and fwd/B), so the within-box pairing and the
+  verdict are unchanged; the halves of a cycle run hours apart, which the report states.
 
 Chains, in order:
 
@@ -243,7 +247,10 @@ Scripts the lab needs:
   cycle loop and lock handling (an arm holds the Docker slot as a long holder for 35 to 45
   minutes), and the cross replay called between arms.
 - `bin/boton-live-slot.sh` and `bin/boton-live-remote.sh`: the live slot beside the replay
-  slot, deploying the k6 suite as `run-load.sh` does (written 2026-11-04).
+  slot, deploying the k6 suite as `run-load.sh` does (written 2026-11-04; the seeded
+  database on 2026-11-05).
+- `bin/boton-seed.sh <A|B> <rskj|rustock>`: puts one client's mainnet seed on a box,
+  removing the other's (2026-11-05, from `boton-rustock-seed.sh`).
 - `clients/rustock.json`: `live_args` beside `import_args`; a `conf/rustock-wallet.keys`
   copied from the fork's example file.
 - `bin/report.py`: the live sections, with the k6 success rate and the cross-replay result
@@ -538,3 +545,21 @@ This is a deliberate step outside the adapter boundary: these are client fixes w
 upstream, carried on the comparison branch until upstream merges them, and every report
 from here names 6712f28. `2026-10-30-c1` (replay, both scenarios, one cycle) is the
 correctness gate for the new build; mainnet-sim live on rustock can rerun once it passes.
+
+### Boton on the mainnet seed (2026-11-04): sequential, one seed per box
+
+The first Boton live campaign (`2026-11-04-c1`, ecdsa from an empty database) ran the
+counterbalanced slots. The `@mainnet` scenarios cannot: each box's 295 GB volume holds the
+RSKj seed (186 GB, perf-lab's copy with its hard-link clone) and has 90 GB free, and
+rustock's seed is 149 GB. Decided with the user on 2026-11-04: run the sequential design of
+`docs/mainnet-db-plan.md` live. `bin/lab.py` runs every RSKj cycle first, both boxes mining
+RSKj at once from clones of the seed (`/var/lib/rsk/clientslab-db`, as the replay slot
+clones it); then `bin/boton-seed.sh <box> rustock` on both boxes, which removes the RSKj seed
+and perf-lab's clone and uploads rustock's seed at about 5 MB/s per box (most of a day; the
+two uploads share the uplink); then every rustock cycle the same way. The arms keep the
+fwd/rev layout, so `bin/stats.py` pairs them by box as before. No extension: an "extend"
+verdict stands as the result, since more cycles would need another swap. Afterwards the
+boxes hold rustock's seed; perf-lab's Boton runs on the mainnet DB need
+`bin/boton-seed.sh <box> rskj` first (noted in `rsk-perf-lab/TO-DO.md`). The boxes have
+7 GB of memory where the Docker arms on the seed get 10 GB; the JVM heap is the same
+(`docker.jvm_heap`).

@@ -3,6 +3,9 @@
 Status: done. Approved 2026-10-27, the seeds converted and the campaigns run that week, both
 seeds rebuilt on 2026-10-28 (last section). The steps and decisions below are kept as the
 record of how it was done; the state of the seeds today is in the last section.
+Update 2026-11-05: `bin/boton-seed.sh <box> <rskj|rustock>` replaces `bin/boton-rustock-seed.sh`
+and stages either client's seed on a box, removing the other's; the live campaign on the seed
+runs the sequential design with it (`docs/live-mining-plan.md`, last section).
 
 Today both clients replay from an empty database, so every block touches a state of a few
 MB. On a real state (the mainnet seed, a 125 GB unitrie) the trie reads and writes
