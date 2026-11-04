@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
-# Runs ON a Boton box: one live mining arm, natively, from an empty database. The box's
-# half of a slot of bin/boton-live-slot.sh, which uploads this script with the inputs and
-# writes $R/arm.env (CLIENT, ARTIFACT, SCEN, OPT, MIN, GAS, FLUSH, HEAP, GEN, GPR).
+# Runs ON a Boton box: one live mining arm, natively, from an empty database or a hard-link
+# clone of the mainnet seed staged on the box. The box's half of a slot of
+# bin/boton-live-slot.sh, which uploads this script with the inputs and writes $R/arm.env
+# (CLIENT, ARTIFACT, SCEN, OPT, MIN, GAS, FLUSH, HEAP, GEN, GPR; on the seed also DB=mainnet,
+# START, SEED and MAINNET_PROPS).
 #
 #   ~/clientslab/bin/boton-live-remote.sh      (cwd and paths: $HOME/clientslab)
 #
@@ -12,19 +14,27 @@
 # runtime image's entrypoint with IS_MINER=true (docker/runtime/Dockerfile) plus the lab's
 # rsk.conf and logback; rustock runs clients/rustock.json live_args with the box's paths.
 #
+# On the mainnet seed the database is a hard-link clone of the seed made on the seed's volume
+# (links do not cross file systems; as bin/boton-campaign.sh does for replays), with the
+# mutable RocksDB files copied and, with the directories, owned by the arm's user (the seed
+# belongs to perf-lab's rsk user) so the seed's tables stay untouched; it is removed once the
+# blocks are exported. RSKj gets node.props (the seed's activations) and maxOpenFiles=1000.
+#
 # Writes $R/run/out/{raw.log, block-breakdown.log, k6.log, k6-summary.json, blocks.txt.gz,
 # hashes.txt, export.log, arm.json, arm.log}, which the slot script copies back.
 set -euo pipefail
 R="$HOME/clientslab"; RUN="$R/run"; OUT="$RUN/out"
 . "$R/arm.env"
+DB="${DB:-empty}"; START="${START:-0}"; SEED="${SEED:-}"; MAINNET_PROPS="${MAINNET_PROPS:-}"
+DBDIR="$RUN/db"; [ "$DB" = mainnet ] && DBDIR=/var/lib/rsk/clientslab-db
 mkdir -p "$OUT" "$RUN/logs"
 ulimit -n 65536
 log() { echo "[$(date -u +%FT%TZ)] $*" | tee -a "$OUT/arm.log"; }
 rpc() { curl -s -m 5 -X POST http://127.0.0.1:4444 -H 'Content-Type: application/json' -d "$1"; }
 height() { local h; h=$(rpc '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' | jq -r .result); [ -n "$h" ] && [ "$h" != null ] && echo $((h)); }
-MAINNET_PROPS=""
+free_gb() { df -k "$1" | awk 'NR==2{print int($4/1048576)}'; }
 RSKJ_PROPS="-Drsk.conf.file=$R/conf/rskj/rsk.conf -Dlogback.configurationFile=$R/conf/rskj/logback.xml
-  -Ddatabase.dir=$RUN/db -Dlogging.dir=$RUN/logs -Dlogging.stdout=OFF -Dlogging.file=INFO -Dlogging=INFO
+  -Ddatabase.dir=$DBDIR -Dlogging.dir=$RUN/logs -Dlogging.stdout=OFF -Dlogging.file=INFO -Dlogging=INFO
   -Dgenesis=$R/conf/$GEN -Dtransaction.accountTxRateLimit.enabled=false -Dpeer.discovery.enabled=false
   -Dminer.server.skipPowValidation=true -Dwire.simulatedDelay=0
   -DtxLoad.blockTargetGas=$GAS -DtxLoad.primaryTxGas=$GAS -Drpc.gasEstimationCap=$GAS -Dtargetgaslimit=$GAS
@@ -36,8 +46,17 @@ RSKJ_MINER="-Dminer.server.enabled=true -Dminer.client.timedMine=true -Dminer.co
   -Dminer.client.medianBlockTime=10s"
 read_args() { local a=(); while IFS= read -r l; do a+=("$l"); done < "$1"; ARGS=("${a[@]}"); }
 
-START=0; STARTED=$(date -u +%FT%TZ); T0=$(date +%s); touch "$OUT/.started"
-log "live arm $CLIENT $SCEN on $(hostname): k6 option $OPT, empty database, $MIN min"
+STARTED=$(date -u +%FT%TZ); T0=$(date +%s); touch "$OUT/.started"
+log "live arm $CLIENT $SCEN on $(hostname): k6 option $OPT, $DB database from #$START, $MIN min"
+if [ "$DB" = mainnet ]; then
+  [ -d "$SEED" ] || { log "no seed at $SEED on this box"; exit 1; }
+  sudo rm -rf "$DBDIR"
+  sudo cp -al "$SEED/." "$DBDIR/" \
+    && sudo find "$DBDIR" -type f ! -name '*.sst' -exec sh -c 'for f; do cp -a "$f" "$f.copy" && mv -f "$f.copy" "$f"; done' _ {} + \
+    && sudo find "$DBDIR" \( -type d -o -type f ! -name '*.sst' \) -exec chown "$(id -u):$(id -g)" {} + \
+    || { log "cloning the seed into $DBDIR failed"; exit 1; }
+  log "seed cloned into $DBDIR ($(free_gb /var/lib/rsk) GB free on its volume)"
+fi
 case "$CLIENT" in
 rskj)
   # shellcheck disable=SC2086
@@ -62,9 +81,11 @@ stop_load() {
 }
 trap 'stop_load || true; stop_node' EXIT
 
-for i in $(seq 1 120); do
+# RPC up (opening the seed takes minutes), at the height the database ends.
+WAIT=120; [ "$DB" = mainnet ] && WAIT=360
+for i in $(seq 1 $WAIT); do
   rpc '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' 2>/dev/null | grep -q result && break
-  kill -0 "$NODE" 2>/dev/null || { log "node exited during startup"; exit 1; }
+  kill -0 "$NODE" 2>/dev/null || { log "node exited during startup: $(grep -h -m1 ERROR "$RUN"/logs/rsk.log "$OUT/raw.log" 2>/dev/null | head -c 300)"; exit 1; }
   sleep 5
 done
 H0=$(height) || { log "RPC never came up"; exit 1; }
@@ -88,7 +109,7 @@ T_END=$(( T0 + MIN * 60 )); n=0
 while [ "$(date +%s)" -lt "$T_END" ]; do
   sleep 60; n=$((n + 1))
   kill -0 "$NODE" 2>/dev/null || { log "node exited during the arm"; exit 1; }
-  if [ "$(df -k "$HOME" | awk 'NR==2{print int($4/1048576)}')" -lt 5 ]; then
+  if [ "$(free_gb "$HOME")" -lt 5 ] || { [ "$DB" = mainnet ] && [ "$(free_gb /var/lib/rsk)" -lt 5 ]; }; then
     log "under 5 GB free on the box; stopping the arm"; exit 1
   fi
   [ $((n % 5)) = 0 ] && log "live arm $CLIENT $SCEN: $n min, height $(height 2>/dev/null || echo '?')"
@@ -118,8 +139,9 @@ fi
 cp "$RUN"/logs/block-breakdown.log "$OUT/" 2>/dev/null || true
 for f in "$RUN"/logs/block-breakdown-*.log.gz; do [ -e "$f" ] && cp "$f" "$OUT/"; done
 if [ -s "$EXPORT" ]; then gzip -9 -c "$EXPORT" > "$OUT/blocks.txt.gz"; awk -F, '{print $1, $2}' "$EXPORT" > "$OUT/hashes.txt"; else : > "$OUT/hashes.txt"; fi
+[ "$DB" = mainnet ] && sudo rm -rf "$DBDIR"
 NB=$(wc -l < "$OUT/hashes.txt" | tr -d ' ')
-jq -n --arg client "$CLIENT" --arg artifact "$ARTIFACT" --arg scenario "$SCEN" --arg db empty --argjson k6_option "$OPT" \
+jq -n --arg client "$CLIENT" --arg artifact "$ARTIFACT" --arg scenario "$SCEN" --arg db "$DB" --argjson k6_option "$OPT" \
   --argjson start "$START" --argjson last "$H" --argjson exported "$NB" --argjson minutes "$MIN" --argjson wall "$WALL" \
   --arg started "$STARTED" --arg host "$(hostname)" --arg cpus "$(nproc)" --arg memory "$(free -g | awk 'NR==2{print $2 "g"}')" \
   --arg heap "$HEAP" --arg mining "$MINING" \

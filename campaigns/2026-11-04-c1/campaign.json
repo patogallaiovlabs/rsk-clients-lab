@@ -1,7 +1,7 @@
 {
  "id": "2026-11-04-c1",
  "dir": "/Users/patricio/workspace/rsk/research-lab/rsk-clients-lab/campaigns/2026-11-04-c1",
- "status": "running",
+ "status": "done",
  "queued_at": "2026-11-04T15:33:59Z",
  "queued_epoch": 1793806439,
  "kind": "live",
@@ -22,7 +22,12 @@
   "rustock": "2f185c8"
  },
  "note": "First live campaign on the Boton boxes (bin/boton-live-slot.sh, new): ecdsa under k6 option 7 on the empty database, both boxes mining at once, one client each, swapped every slot; cross replays in Docker on this Mac. RSKj fa5733f8e (perf-lab/integration with s010, co.rsk:native on libsecp256k1 0.8.0) vs rustock 2f185c8 (gated by 2026-11-02-c1). The Docker counterpart on the new baseline is 2026-11-02-c2 (ecdsa@mainnet, 1.38x); the empty-database Docker live row before s010 was 2026-10-28-c4 (2.94x). The boxes hold no rustock seed, so the @mainnet scenarios cannot run live there yet.",
- "results": {},
+ "results": {
+  "boton/ecdsa": {
+   "verdict": "rustock faster",
+   "why": "rustock faster in 6/6 cycles, median -25.83%, sign-test p=0.03125"
+  }
+ },
  "shas": {
   "rskj": "fa5733f8eb9a9b733fa55c6b6326c1bf01e50a93",
   "rustock": "2f185c8fe781f28142c5cf02617ae2be2c0f7e9d"
@@ -349,5 +354,6 @@
    "_mainnet_args_doc": "mainnet_*_args: the same regtest configuration as *_args on the converted mainnet seed, whose trie lives in the single RocksDB backend. The seed runs as regtest (chain id 33, conf/genesis_25M.json, every hardfork at genesis): that is how RSKj mines on it (--regtest plus node.props), so the sample's transactions carry chain id 33. Verified 2026-10-27: 204 blocks of mainnet-sim@mainnet imported with the reference hashes."
   }
  },
- "started_at": "2026-11-04T15:54:55Z"
+ "started_at": "2026-11-04T15:54:55Z",
+ "finished_at": "2026-11-04T22:21:03Z"
 }

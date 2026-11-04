@@ -17,8 +17,10 @@ A live campaign (--kind live) replaces the replay with bin/live-arm.sh: each cli
 its own blocks under k6 load for live.arm_minutes, the cycle then replays each arm's blocks
 into the other client (the cross replay, in Docker on this Mac) and bin/check-live-arm.sh
 decides whether the arm counts. The cycle loop, the lock handling and the verdict are the
-same. On Boton (--where boton, empty-database scenarios only) a cycle is two slots of
-bin/boton-live-slot.sh: both boxes mine at once, one client each, then swapped.
+same. On Boton (--where boton) a cycle is two slots of bin/boton-live-slot.sh: both boxes
+mine at once, one client each, then swapped. On the mainnet seed the boxes hold one client's
+seed at a time, so the campaign is sequential: every RSKj cycle, the seed swap
+(bin/boton-seed.sh), every rustock cycle (docs/mainnet-db-plan.md).
 """
 import argparse, datetime as dt, glob, json, os, subprocess, sys, time
 
@@ -81,9 +83,6 @@ def queue(a):
             sys.exit(f"unknown scenario {s}")
         if a.kind == "live" and CFG["scenarios"][s].get("k6_option") is None:
             sys.exit(f"scenario {s} has no k6_option; a live campaign needs one")
-        if a.kind == "live" and "boton" in c["where"] and CFG["scenarios"][s].get("db", "empty") != "empty":
-            sys.exit(f"scenario {s} runs on the mainnet seed; the Boton boxes hold no rustock seed beside the RSKj one, "
-                     "so only empty-database scenarios run live there")
     save(c)
     open(os.path.join(QUEUE, cid), "w").close()
     print(cid)
@@ -241,49 +240,111 @@ def cycle(cid, scen, k, order):
         sys.exit(4)
 
 
-BOTON_SLOTS = (("fwd", ("rskj", "rustock")), ("rev", ("rustock", "rskj")))  # (box A, box B)
+# The Boton live layout, per cycle k: c<k>-fwd/{A,B} and c<k>-rev/{A,B}; bin/stats.py
+# boton_cycles pairs box A's rskj fwd with its rustock rev and box B's rskj rev with its
+# rustock fwd. A unit is what one bin/boton-live-slot.sh call runs, as (slot, box, client)
+# arms: on an empty database the two counterbalanced slots; on the mainnet seed one client on
+# both boxes, since the boxes hold one client's seed at a time (docs/mainnet-db-plan.md).
+BOTON_UNITS = {
+    "fwd": (("fwd", "A", "rskj"), ("fwd", "B", "rustock")),
+    "rev": (("rev", "A", "rustock"), ("rev", "B", "rskj")),
+    "rskj": (("fwd", "A", "rskj"), ("rev", "B", "rskj")),
+    "rustock": (("rev", "A", "rustock"), ("fwd", "B", "rustock")),
+}
+
+
+def boton_sequential(scen):
+    return CFG["scenarios"][scen].get("db", "empty") != "empty"
+
+
+def boton_arm_dir(d, k, slot, box):
+    return os.path.join(d, f"c{k}-{slot}", box)
+
+
+def boton_seed(c, client):
+    """Both boxes get the client's seed (bin/boton-seed.sh, a no-op on a box that has it),
+    in parallel: most of a day when a seed has to be uploaded."""
+    d = os.path.join(c["dir"], "raw", "boton")
+    log(f"boton: staging the {client} seed on both boxes (bin/boton-seed.sh, raw/boton/seed-{client}-<box>.log)", c)
+    t0 = time.time()
+    procs = {}
+    for box in CFG["boton"]["boxes"]:
+        f = open(os.path.join(d, f"seed-{client}-{box}.log"), "a")
+        procs[box] = subprocess.Popen([os.path.join(BIN, "boton-seed.sh"), box, client], stdout=f, stderr=subprocess.STDOUT)
+    failed = [box for box, p in procs.items() if p.wait() != 0]
+    if failed:
+        raise RuntimeError(f"staging the {client} seed failed on box {' and '.join(failed)}; see raw/boton/seed-{client}-<box>.log")
+    log(f"boton: both boxes hold the {client} seed ({int((time.time() - t0) / 60)} min)", c)
+
+
+def boton_unit_done(d, k, unit):
+    return all(stats.per_block(boton_arm_dir(d, k, slot, box)) for slot, box, _ in BOTON_UNITS[unit])
+
+
+def boton_unit(c, scen, d, k, unit):
+    """One unit of cycle k, unless its arms already count: the slot on the boxes (which holds
+    the box locks), then the arms' cross replays and checks in Docker here. An arm that
+    measured nothing repeats the unit, up to three attempts; a cross replay that fails stops
+    the campaign."""
+    if boton_unit_done(d, k, unit):
+        return
+    arms = BOTON_UNITS[unit]
+    by_box = {box: (slot, client) for slot, box, client in arms}
+    args = []
+    for box in ("A", "B"):
+        slot, client = by_box[box]
+        args += [boton_arm_dir(d, k, slot, box), client]
+    logf = os.path.join(d, f"c{k}-{unit}.log")
+    for attempt in range(1, 4):
+        for slot, box, _ in arms:
+            sh(["rm", "-rf", boton_arm_dir(d, k, slot, box)])
+        with open(logf, "a") as f:
+            r = subprocess.run([os.path.join(BIN, "boton-live-slot.sh"), c["id"], scen] + args,
+                               stdout=f, stderr=subprocess.STDOUT,
+                               env=dict(os.environ, CLIENTSLAB_PRIORITY=str(c["queued_epoch"])))
+        if r.returncode != 0:
+            tail = sh(["tail", "-n", "5", logf], check=False).stdout
+            raise RuntimeError(f"boton live c{k}-{unit} of {scen} failed (exit {r.returncode}):\n{tail}")
+        cmd = f'. "{BIN}/lib.sh"; lock_acquire docker "long:$CLIENTSLAB_PRIORITY"; trap "lock_release docker" EXIT; ' \
+              f'"{sys.executable}" "{BIN}/lab.py" _boton_check "{c["id"]}" "{scen}" {k} {unit}'
+        r = subprocess.run(["bash", "-c", cmd], env=dict(os.environ, CLIENTSLAB_PRIORITY=str(c["queued_epoch"])))
+        if r.returncode == 3:
+            raise ConsensusFailure(open(os.path.join(d, "consensus-failure.txt")).read())
+        if r.returncode == 4:
+            log(f"boton live c{k}-{unit} of {scen}, attempt {attempt}: arm discarded, repeating the unit: "
+                + open(os.path.join(d, "arm-discarded.txt")).read().strip(), c)
+            continue
+        if r.returncode != 0:
+            raise RuntimeError(f"boton live checks of c{k}-{unit} of {scen} failed (exit {r.returncode})")
+        return
+    raise RuntimeError(f"boton live c{k}-{unit} of {scen} discarded three times; see arm-discarded.txt")
 
 
 def run_boton_live(c, scen):
-    """The Boton cycles of one live scenario: per cycle a fwd and a rev slot, each slot both
-    boxes mining at once (bin/boton-live-slot.sh, which holds the box locks), then the two
-    arms' cross replays and checks in Docker here. A slot with an arm that measured nothing
-    is repeated, up to three attempts; a cross replay that fails stops the campaign."""
+    """The Boton cycles of one live scenario. Empty database: per cycle the fwd and the rev
+    unit, judged after `cycles` and extended while undecided. Mainnet seed: sequential, every
+    cycle of one client (both boxes at once), the seed swap, every cycle of the other, then
+    the verdict; never extended, since more cycles would need another seed swap."""
     d = os.path.join(c["dir"], "raw", "boton", scen)
     os.makedirs(d, exist_ok=True)
+    if boton_sequential(scen):
+        for client in c.get("clients", ["rskj", "rustock"]):
+            if all(boton_unit_done(d, k, client) for k in range(1, c["cycles"] + 1)):
+                continue  # a rerun: this half is done, and its seed may be gone from the boxes
+            boton_seed(c, client)
+            for k in range(1, c["cycles"] + 1):
+                boton_unit(c, scen, d, k, client)
+        v = stats.judge("boton", d, scen)
+        log(f"boton {scen} after {c['cycles']} sequential cycles: {v['verdict']} ({v['why']})"
+            + ("; not extended: more cycles would need another seed swap" if v["verdict"] == "extend" else ""), c)
+        return v
     k = 0
     while True:
         k += 1
         if k > c["max_cycles"]:
             break
-        for slot, (ca, cb) in BOTON_SLOTS:
-            sd = os.path.join(d, f"c{k}-{slot}")
-            if all(stats.per_block(os.path.join(sd, box)) for box in ("A", "B")):
-                continue
-            for attempt in range(1, 4):
-                if os.path.isdir(sd):
-                    sh(["rm", "-rf", sd])
-                with open(os.path.join(d, f"c{k}-{slot}.log"), "a") as f:
-                    r = subprocess.run([os.path.join(BIN, "boton-live-slot.sh"), c["id"], scen, sd, ca, cb],
-                                       stdout=f, stderr=subprocess.STDOUT,
-                                       env=dict(os.environ, CLIENTSLAB_PRIORITY=str(c["queued_epoch"])))
-                if r.returncode != 0:
-                    tail = sh(["tail", "-n", "5", os.path.join(d, f"c{k}-{slot}.log")], check=False).stdout
-                    raise RuntimeError(f"boton live slot c{k}-{slot} of {scen} failed (exit {r.returncode}):\n{tail}")
-                cmd = f'. "{BIN}/lib.sh"; lock_acquire docker "long:$CLIENTSLAB_PRIORITY"; trap "lock_release docker" EXIT; ' \
-                      f'"{sys.executable}" "{BIN}/lab.py" _boton_check "{c["id"]}" "{scen}" {k} {slot}'
-                r = subprocess.run(["bash", "-c", cmd], env=dict(os.environ, CLIENTSLAB_PRIORITY=str(c["queued_epoch"])))
-                if r.returncode == 3:
-                    raise ConsensusFailure(open(os.path.join(d, "consensus-failure.txt")).read())
-                if r.returncode == 4:
-                    log(f"boton live c{k}-{slot} of {scen}, attempt {attempt}: arm discarded, repeating the slot: "
-                        + open(os.path.join(d, "arm-discarded.txt")).read().strip(), c)
-                    continue
-                if r.returncode != 0:
-                    raise RuntimeError(f"boton live checks of c{k}-{slot} of {scen} failed (exit {r.returncode})")
-                break
-            else:
-                raise RuntimeError(f"boton live slot c{k}-{slot} of {scen} discarded three times; see arm-discarded.txt")
+        for unit in ("fwd", "rev"):
+            boton_unit(c, scen, d, k, unit)
         if k >= c["cycles"]:
             v = stats.judge("boton", d, scen)
             log(f"boton {scen} after {k} cycles: {v['verdict']} ({v['why']})", c)
@@ -292,19 +353,18 @@ def run_boton_live(c, scen):
     return stats.judge("boton", d, scen)
 
 
-def boton_check(cid, scen, k, slot):
-    """Both arms of one Boton live slot: cross replay in Docker, then the checks. Called
-    under the Docker lock by run_boton_live; exit 3 on a consensus failure, 4 when an arm
-    measured nothing."""
+def boton_check(cid, scen, k, unit):
+    """The arms of one Boton live unit: cross replay in Docker, then the checks. Called under
+    the Docker lock by boton_unit; exit 3 on a consensus failure, 4 when an arm measured
+    nothing."""
     c = load(cid)
     d = os.path.join(c["dir"], "raw", "boton", scen)
-    sd = os.path.join(d, f"c{k}-{slot}")
-    clients = dict(BOTON_SLOTS)[slot]
+    arms = BOTON_UNITS[unit]
     try:
-        for box, client in zip(("A", "B"), clients):
-            cross_replay(c, client, scen, os.path.join(sd, box))
-        for box, client in zip(("A", "B"), clients):
-            check_live(c, client, scen, os.path.join(sd, box))
+        for slot, box, client in arms:
+            cross_replay(c, client, scen, boton_arm_dir(d, k, slot, box))
+        for slot, box, client in arms:
+            check_live(c, client, scen, boton_arm_dir(d, k, slot, box))
     except ConsensusFailure as e:
         open(os.path.join(d, "consensus-failure.txt"), "w").write(str(e))
         sys.exit(3)
@@ -377,7 +437,7 @@ def main():
     cy = sp.add_parser("_cycle")
     cy.add_argument("id"); cy.add_argument("scen"); cy.add_argument("k", type=int); cy.add_argument("order", nargs="+")
     bc = sp.add_parser("_boton_check")
-    bc.add_argument("id"); bc.add_argument("scen"); bc.add_argument("k", type=int); bc.add_argument("slot", choices=("fwd", "rev"))
+    bc.add_argument("id"); bc.add_argument("scen"); bc.add_argument("k", type=int); bc.add_argument("unit", choices=tuple(BOTON_UNITS))
     a = ap.parse_args()
     if a.cmd == "queue":
         queue(a)
@@ -394,7 +454,7 @@ def main():
     elif a.cmd == "_cycle":
         cycle(a.id, a.scen, a.k, a.order)
     elif a.cmd == "_boton_check":
-        boton_check(a.id, a.scen, a.k, a.slot)
+        boton_check(a.id, a.scen, a.k, a.unit)
 
 
 if __name__ == "__main__":

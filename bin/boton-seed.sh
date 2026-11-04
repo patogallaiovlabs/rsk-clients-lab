@@ -68,5 +68,10 @@ while true; do
   log "box $BOX: rsync stopped; retrying in 5 minutes"; sleep 300
 done
 rsync -a -e "ssh ${BOX_SSH[*]}" "$META" "ubuntu@$H:$RMETA"
-box_ssh "$BOX" "sudo find $DEST -name '*.sst' -exec chmod a-w {} +; touch $READY; du -sh $DEST; df -h /var/lib/rsk | tail -1"
+# The RSKj seed goes back to perf-lab's rsk user when the box has one (its own upload does the
+# same); the lab's arms run on clones whose directories and copied files are chowned to the
+# arm's user, the hard-linked .sst stay read-only and owned by the seed's uploader.
+box_ssh "$BOX" "sudo find $DEST -name '*.sst' -exec chmod a-w {} +
+  if [ $CLIENT = rskj ] && id rsk >/dev/null 2>&1; then sudo chown -R rsk:rsk $DEST $RMETA; fi
+  touch $READY; du -sh $DEST; df -h /var/lib/rsk | tail -1"
 log "box $BOX: $CLIENT seed ready in $DEST"

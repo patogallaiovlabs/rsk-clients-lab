@@ -7,7 +7,7 @@ preceded the lab's; where a claim is an inference rather than something read, th
 so. The sections after them record what the runs found, latest last. What the design
 settled on: the adapter branches `harness/timed-mining`, `harness/mined-block-timing`,
 `harness/export-blocks`, `harness/mined-header-version` and `harness/account-slots`, all on
-`clients-lab/harness`; 2 CPUs per container; a Boton live slot since 2026-11-04, sequential on the mainnet seed since 2026-11-05 (last section); and, since 2026-10-29, k6
+`clients-lab/harness`; 2 CPUs per container; a Boton live slot since 2026-11-04, sequential on the mainnet seed since 2026-11-04 (last section); and, since 2026-10-29, k6
 pricing by the head minimum times 1.1 on both arms rather than by each node's `eth_gasPrice`.
 
 The replay campaigns feed both clients the same blocks. A live campaign has each client mine
@@ -563,3 +563,13 @@ boxes hold rustock's seed; perf-lab's Boton runs on the mainnet DB need
 `bin/boton-seed.sh <box> rskj` first (noted in `rsk-perf-lab/TO-DO.md`). The boxes have
 7 GB of memory where the Docker arms on the seed get 10 GB; the JVM heap is the same
 (`docker.jvm_heap`).
+
+Smoke test before the campaign (2026-11-04, 3-minute RSKj arms on both boxes with c1's
+builds): the first attempt died opening RocksDB, "Permission denied" renaming `unitrie/LOG`,
+because the clone made with `sudo cp -al` kept the seed's owner (perf-lab's `rsk` user) and
+the arm runs as `ubuntu`. The remote script now chowns the clone's directories and copied
+files to the arm's user; the hard-linked `.sst` stay read-only and the seed's. The second
+attempt opened at #9003567 in about 30 s, mined 7 and 12 blocks, and rustock replayed box
+B's 12 blocks on its seed clone in Docker with matching hashes. Campaign: `2026-11-04-c2`
+(queued and started 22:36 UTC; RSKj half, swap, rustock half; verdict expected late on
+2026-11-06 UTC).

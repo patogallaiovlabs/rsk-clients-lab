@@ -1,2 +1,27 @@
 [2026-11-04T15:41:48Z] rskj fa5733f8e, rustock 2f185c8fe
 [2026-11-04T15:54:55Z] rskj fa5733f8e, rustock 2f185c8fe
+[2026-11-04T16:27:06Z] live ecdsa A: 121 blocks mined, 73 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T16:27:06Z] live ecdsa B: 123 blocks mined, 72 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T16:59:14Z] live ecdsa A: 133 blocks mined, 84 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T16:59:14Z] live ecdsa B: 131 blocks mined, 82 qualifying, k6 99.99%, cross replay ok
+[2026-11-04T17:31:28Z] live ecdsa A: 132 blocks mined, 84 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T17:31:28Z] live ecdsa B: 121 blocks mined, 72 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T18:03:35Z] live ecdsa A: 115 blocks mined, 66 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T18:03:36Z] live ecdsa B: 135 blocks mined, 87 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T18:36:05Z] live ecdsa A: 118 blocks mined, 69 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T18:36:05Z] live ecdsa B: 132 blocks mined, 83 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T19:08:10Z] live ecdsa A: 100 blocks mined, 51 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T19:08:10Z] live ecdsa B: 122 blocks mined, 74 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T19:40:26Z] live ecdsa A: 111 blocks mined, 63 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T19:40:26Z] live ecdsa B: 129 blocks mined, 79 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T20:12:30Z] live ecdsa A: 118 blocks mined, 69 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T20:12:31Z] live ecdsa B: 134 blocks mined, 86 qualifying, k6 99.99%, cross replay ok
+[2026-11-04T20:44:42Z] live ecdsa A: 117 blocks mined, 69 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T20:44:42Z] live ecdsa B: 124 blocks mined, 75 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T21:16:51Z] live ecdsa A: 122 blocks mined, 73 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T21:16:51Z] live ecdsa B: 125 blocks mined, 76 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T21:49:00Z] live ecdsa A: 116 blocks mined, 68 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T21:49:00Z] live ecdsa B: 106 blocks mined, 57 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T22:21:03Z] live ecdsa A: 137 blocks mined, 88 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T22:21:03Z] live ecdsa B: 115 blocks mined, 67 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T22:21:03Z] boton ecdsa after 6 cycles: rustock faster (rustock faster in 6/6 cycles, median -25.83%, sign-test p=0.03125)

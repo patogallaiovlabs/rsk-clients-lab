@@ -45,13 +45,15 @@ def arm_table(raw):
         cross_s = "ok" if k.get("checks", {}).get("cross_replay") else \
             ("not run" if cross == "not run" else f"FAILED at {cross.get('first_difference') or '?'}" if isinstance(cross, dict) else "n/a")
         pct = k.get("k6_success_pct")
-        rows.append(f"| {cycle} | {client} | {k.get('expected', 'n/a')} | {k.get('qualifying_blocks', 'n/a')} | "
+        ap = os.path.join(os.path.dirname(p), "arm.json")
+        started = json.load(open(ap)).get("started_at", "") if os.path.exists(ap) else ""
+        rows.append(f"| {cycle} | {client} | {started[:16].replace('T', ' ')} | {k.get('expected', 'n/a')} | {k.get('qualifying_blocks', 'n/a')} | "
                     f"{k.get('tx_count', 'n/a')} | {(k.get('gas_used') or 0):,} | "
                     f"{pct if pct is None else f'{pct:.2f}%'} | {cross_s} | {'yes' if k.get('consensus_ok') else 'no'} |")
     if not rows:
         return []
-    return ["| cycle | client | blocks mined | qualifying | txs | gas used | k6 success | cross replay | counts |",
-            "|---|---|---|---|---|---|---|---|---|"] + rows + [""]
+    return ["| cycle | client | started (UTC) | blocks mined | qualifying | txs | gas used | k6 success | cross replay | counts |",
+            "|---|---|---|---|---|---|---|---|---|---|"] + rows + [""]
 
 
 def main(cid):
@@ -89,11 +91,23 @@ def main(cid):
                  "(`live.k6_gas_price`)" if lv.get("k6_gas_price") == "head-minimum-x1.1" else "")
               + ".", ""]
         if "boton" in c["where"]:
-            L += ["Boton: the two boxes mine at the same time, one client each, natively from an empty "
-                  "database (`bin/boton-live-slot.sh`): the fwd slot runs RSKj on box A and rustock on box B, "
-                  "the rev slot swaps them, and a cycle is one of each. k6 runs on the box against its own "
-                  "node, with the same options and pricing rule as in Docker; the cross replays run in Docker "
-                  "on this Mac. A cycle's figure is the mean of the two boxes' within-box comparisons.", ""]
+            seeded = any(cfg.get("scenarios", {}).get(s, {}).get("db") == "mainnet" for s in c["scenarios"])
+            if seeded:
+                L += ["Boton: the boxes hold one client's seed at a time (295 GB volumes), so the campaign ran "
+                      "sequentially (`docs/mainnet-db-plan.md`): every RSKj arm first, both boxes mining at the "
+                      "same time, each from a hard-link clone of the RSKj seed; then the seed swap "
+                      "(`bin/boton-seed.sh`, most of a day); then every rustock arm the same way. The arms keep "
+                      "the fwd/rev layout, so a cycle's figure is still the mean of the two boxes' within-box "
+                      "comparisons, but the two halves of a cycle ran hours apart (the arm table has the times). "
+                      "k6 runs on the box against its own node, with the same options and pricing rule as in "
+                      "Docker; the cross replays run in Docker on this Mac on a clone of the seed here. The "
+                      "boxes have 7 GB of memory where the Docker arms get 10 GB.", ""]
+            else:
+                L += ["Boton: the two boxes mine at the same time, one client each, natively from an empty "
+                      "database (`bin/boton-live-slot.sh`): the fwd slot runs RSKj on box A and rustock on box B, "
+                      "the rev slot swaps them, and a cycle is one of each. k6 runs on the box against its own "
+                      "node, with the same options and pricing rule as in Docker; the cross replays run in Docker "
+                      "on this Mac. A cycle's figure is the mean of the two boxes' within-box comparisons.", ""]
     else:
         mainnet = any(cfg.get("scenarios", {}).get(s, {}).get("db") == "mainnet" for s in c["scenarios"])
         start = ("a hard-link clone of the mainnet seed (`docs/mainnet-db-plan.md`)" if mainnet
