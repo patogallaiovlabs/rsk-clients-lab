@@ -119,8 +119,13 @@ stop_load || true
 H=$(height) || { log "RPC gone at the end of the arm"; exit 1; }
 stop_node
 WALL=$(( $(date +%s) - T0 ))
-find "$R/k6-tests/results" -name '*.json' -newer "$OUT/.started" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1 \
-  | while IFS= read -r f; do cp "$f" "$OUT/k6-summary.json"; done
+# The newest k6 summary of this arm, if the scenario writes one (a bare `ls -t` would list
+# the working directory when none does).
+NEWEST=""
+for f in $(find "$R/k6-tests/results" -name '*.json' -newer "$OUT/.started" 2>/dev/null); do
+  [ -n "$NEWEST" ] && [ ! "$f" -nt "$NEWEST" ] || NEWEST="$f"
+done
+[ -z "$NEWEST" ] || cp "$NEWEST" "$OUT/k6-summary.json"
 
 FROM=$((START + 1)); EXPORT="$RUN/export.txt"
 if [ "$H" -ge "$FROM" ]; then

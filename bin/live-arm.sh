@@ -86,9 +86,9 @@ rskj_tool() {
   local cls="$1" opts="$2"; shift 2
   docker run "$@" "${DATA[@]}" -v "$ART":/usr/local/lib/rsk/rsk.jar:ro -v "$LAB/conf":/conf:ro \
     -e MINER_ID=1 -e IS_MINER="${IS_MINER:-false}" -e WIRE_DELAY=0 -e BLOCK_GAS_LIMIT="$GAS" \
-    -e GENESIS_FILE="$GEN" -e FLUSH_BLOCKS="$FLUSH" -e DEFAULT_JVM_OPTS="$HEAP" \
+    -e GENESIS_FILE="$GEN" -e FLUSH_BLOCKS="$FLUSH" -e DEFAULT_JVM_OPTS="$HEAP${IS_MINER:+ ${CLIENTSLAB_RSKJ_JVM_EXTRA:-}}" \
     -e RSKJ_SYS_PROPS="-Drsk.conf.file=/conf/rskj/rsk.conf -Dlogging.dir=test/local-regtest/ -Dtransaction.accountTxRateLimit.enabled=false -Dpeer.discovery.enabled=false" \
-    -e RSKJ_LOG_PROPS="-Dlogback.configurationFile=/conf/rskj/logback.xml -Dlogging.stdout=OFF -Dlogging.file=INFO -Dlogging=INFO $MAINNET_PROPS" \
+    -e RSKJ_LOG_PROPS="-Dlogback.configurationFile=${CLIENTSLAB_RSKJ_LOGBACK:-/conf/rskj/logback.xml} -Dlogging.stdout=OFF -Dlogging.file=INFO -Dlogging=INFO $MAINNET_PROPS" \
     -e RSKJ_CLASS="$cls" -e RSKJ_OPTS="$opts" "$RUNTIME"
 }
 
@@ -159,8 +159,13 @@ docker stop -t 120 "$CT" >/dev/null; docker logs "$CT" > "$OUT/raw.log" 2>&1 || 
 docker rm -f "$CT" >/dev/null 2>&1 || true
 WALL=$(( $(date +%s) - T0 ))
 # The k6 summary file, when the scenario writes one (option 7 does; option 14 only prints).
-find "$K6/results" -name '*.json' -newer "$OUT/.started" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1 \
-  | while IFS= read -r f; do cp "$f" "$OUT/k6-summary.json"; done
+# The newest k6 summary of this arm, if the scenario writes one (a bare `ls -t` would list
+# the working directory when none does).
+NEWEST=""
+for f in $(find "$K6/results" -name '*.json' -newer "$OUT/.started" 2>/dev/null); do
+  [ -n "$NEWEST" ] && [ ! "$f" -nt "$NEWEST" ] || NEWEST="$f"
+done
+[ -z "$NEWEST" ] || cp "$NEWEST" "$OUT/k6-summary.json"
 
 # The node's own blocks, exported from the stopped database for the cross replay, in
 # RSKj's ExportBlocks format (number,hash,... per line).
@@ -177,6 +182,7 @@ if [ "$H" -ge "$FROM" ]; then
   esac
 fi
 docker run --rm "${DATA[@]}" -v "$OUT":/to alpine sh -c "cp $LOGDIR/block-breakdown.log /to/ 2>/dev/null; \
+  for f in $LOGDIR/rsk.log $LOGDIR/diag.log $MNT/*.jfr; do [ -e \"\$f\" ] && cp \"\$f\" /to/; done; \
   for f in $LOGDIR/block-breakdown-*.log.gz; do [ -e \"\$f\" ] && cp \"\$f\" /to/; done; \
   [ -e $EXPORT ] && gzip -9 -c $EXPORT > /to/blocks.txt.gz; true"
 db_drop

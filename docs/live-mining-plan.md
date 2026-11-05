@@ -627,6 +627,14 @@ found four suite problems and two fullness facts, all fixed in `k6-tests` (branc
   (17) alternates 23.7M and 21.3M: their `threshold` is 0.85, so their blocks qualify.
   Every other scenario saturates (23.6M to 25.0M).
 
+The backlog's first run of `2026-11-05-c1` (mainnet-sim) lost its two 30-minute arms at
+their end: the arm scripts' new "newest k6 summary" pick ran a bare `ls -t` when the
+scenario wrote no custom summary (option 14 prints k6's default one), tried to copy the
+box's working directory and aborted the remote script before the export. The pick is now
+a loop over `find`'s matches. The driver also stopped after that campaign because
+`lab.py run` inherited the id list on stdin and ssh read it; it runs with stdin from
+`/dev/null` now. Restarted 16:50 UTC with c1 re-queued.
+
 perf-lab's `repos/rskj-k6-tests` holds the same content as this suite before these fixes
 under a duplicate commit of the ERC-20 fix; to take them it resets to the branch head
 (`rsk-perf-lab/TO-DO.md`).
