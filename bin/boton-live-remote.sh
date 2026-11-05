@@ -119,7 +119,7 @@ stop_load || true
 H=$(height) || { log "RPC gone at the end of the arm"; exit 1; }
 stop_node
 WALL=$(( $(date +%s) - T0 ))
-find "$R/k6-tests/results" -name '*.json' -newer "$OUT/.started" 2>/dev/null | head -1 \
+find "$R/k6-tests/results" -name '*.json' -newer "$OUT/.started" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1 \
   | while IFS= read -r f; do cp "$f" "$OUT/k6-summary.json"; done
 
 FROM=$((START + 1)); EXPORT="$RUN/export.txt"

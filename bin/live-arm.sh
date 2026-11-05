@@ -159,7 +159,7 @@ docker stop -t 120 "$CT" >/dev/null; docker logs "$CT" > "$OUT/raw.log" 2>&1 || 
 docker rm -f "$CT" >/dev/null 2>&1 || true
 WALL=$(( $(date +%s) - T0 ))
 # The k6 summary file, when the scenario writes one (option 7 does; option 14 only prints).
-find "$K6/results" -name '*.json' -newer "$OUT/.started" 2>/dev/null | head -1 \
+find "$K6/results" -name '*.json' -newer "$OUT/.started" -print0 2>/dev/null | xargs -0 ls -t 2>/dev/null | head -1 \
   | while IFS= read -r f; do cp "$f" "$OUT/k6-summary.json"; done
 
 # The node's own blocks, exported from the stopped database for the cross replay, in

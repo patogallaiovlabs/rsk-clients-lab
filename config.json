@@ -48,6 +48,97 @@
       "threshold": 0.9,
       "min_difference_pct": 1.0,
       "_doc": "first_block/last_block are filled from samples/<name>/meta.json once bin/build-mainnet-sample.sh has run"
+    },
+    "storage-stress@mainnet": {
+      "description": "k6 option 1 (Storage Stress Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md); its three senders fill blocks to 51%, 72% and 92% in turn, so one block in three qualifies, and its success metric counts receipts it stopped polling for (gate 60%)",
+      "db": "mainnet",
+      "k6_option": 1,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "keccak-writes@mainnet": {
+      "description": "k6 option 2 (Keccak Random Writes Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md); its blocks fill to 85-89% by design (threshold 0.85)",
+      "db": "mainnet",
+      "k6_option": 2,
+      "threshold": 0.85,
+      "min_difference_pct": 2.0
+    },
+    "block-fill-variants@mainnet": {
+      "description": "k6 option 5 (Block Fill Variants Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 5,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "storage-reads@mainnet": {
+      "description": "k6 option 6 (Storage Random Reads Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 6,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "cpu-computation@mainnet": {
+      "description": "k6 option 8 (CPU Computation Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 8,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "memory-allocation@mainnet": {
+      "description": "k6 option 9 (Memory Allocation Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 9,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "memory-array@mainnet": {
+      "description": "k6 option 10 (Memory Array Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 10,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "calldata-settlement@mainnet": {
+      "description": "k6 option 11 (Calldata Settlement Test, L2 rollup simulation), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 11,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "calldata-random@mainnet": {
+      "description": "k6 option 12 (Calldata Random Verification Test), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 12,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "block-filler@mainnet": {
+      "description": "k6 option 15 (Block Filler Stress Test, 21k gas transfers), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 15,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "worst-case-block@mainnet": {
+      "description": "k6 option 17 (Worst-Case Single Block, one tx fills the block), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md); its blocks fill to 85-89% by design (threshold 0.85)",
+      "db": "mainnet",
+      "k6_option": 17,
+      "threshold": 0.85,
+      "min_difference_pct": 2.0
+    },
+    "state-growth@mainnet": {
+      "description": "k6 option 18 (State Growth, unbounded new slots), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md)",
+      "db": "mainnet",
+      "k6_option": 18,
+      "threshold": 0.9,
+      "min_difference_pct": 2.0
+    },
+    "contention@mainnet": {
+      "description": "k6 option 19 (Write Contention, shared slots), live mining only, mined on the mainnet seed (2026-11-05: rustock-only backlog on Boton, docs/live-mining-plan.md); its blocks fill to 85-89% by design (threshold 0.85)",
+      "db": "mainnet",
+      "k6_option": 19,
+      "threshold": 0.85,
+      "min_difference_pct": 2.0
     }
   },
   "chain": {
@@ -101,15 +192,42 @@
     "min_qualifying_blocks": 20,
     "k6_success_metric": {
       "14": "tx_success_rate",
-      "7": "stress_call_success_rate"
+      "7": "stress_call_success_rate",
+      "1": "stress_call_success_rate",
+      "2": "stress_call_success_rate",
+      "5": "stress_call_success_rate",
+      "6": "stress_call_success_rate",
+      "8": "stress_call_success_rate",
+      "9": "stress_call_success_rate",
+      "10": "stress_call_success_rate",
+      "11": "stress_call_success_rate",
+      "12": "stress_call_success_rate",
+      "15": "tx_success_rate",
+      "17": "stress_call_success_rate",
+      "18": "stress_call_success_rate",
+      "19": "stress_call_success_rate"
     },
     "k6_min_success_pct": {
       "14": 98,
-      "7": 80
+      "7": 80,
+      "1": 60,
+      "2": 80,
+      "5": 80,
+      "6": 80,
+      "8": 80,
+      "9": 80,
+      "10": 80,
+      "11": 80,
+      "12": 80,
+      "15": 25,
+      "17": 80,
+      "18": 80,
+      "19": 80
     },
     "rpc_port": 4444,
     "k6_gas_price": "head-minimum-x1.1",
     "k6_gas_price_doc": "GAS_PRICE_RULE for the k6 suite: 'head-minimum-x1.1' prices every transaction at the head block's minimumGasPrice times 1.1 on both arms (rskj's own eth_gasPrice rule while the fee market is not working); 'node' asks each client's eth_gasPrice. Pinned since 2026-10-28-c6: rustock's eth_gasPrice follows the seed's history and its miner does not apply the RSKIP252 cap (docs/live-mining-plan.md).",
-    "mining_coinbase": "0x1111111111111111111111111111111111111111"
+    "mining_coinbase": "0x1111111111111111111111111111111111111111",
+    "k6_success_doc": "k6_success_metric/k6_min_success_pct per k6 option: 14 prints k6's default summary with tx_success_rate (98%); 15 (block filler) too, but its metric counts bursts of transfers cut at the first pool rejection (nonce races between 30 senders), so it is gated at 25% and the qualifying-blocks check carries the load evidence (its blocks are full); 7 and the other stress scenarios write a custom summary with stress_call_success_rate, gated at 80% as option 7 (reverts at the densest phases are part of the load); option 1 (storage stress) at 60%, since its metric also counts transactions whose receipt it stopped polling for (maxWait) while the block was full."
   }
 }

@@ -32,7 +32,9 @@ def ratio(delta_pct, short=False):
 
 
 def arm_table(raw):
-    """Per live arm: what it mined, what k6 saw, whether the cross replay passed."""
+    """Per live arm: what it mined, what k6 saw, whether the cross replay passed, its ms/block."""
+    sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
+    import stats  # noqa: E402
     rows = []
     # Docker: raw/<scen>/c<k>-<client>/; Boton: raw/<scen>/c<k>-<fwd|rev>/<A|B>/.
     paths = glob.glob(os.path.join(raw, "c*-*", "consensus.json")) + glob.glob(os.path.join(raw, "c*-*", "[AB]", "consensus.json"))
@@ -47,13 +49,15 @@ def arm_table(raw):
         pct = k.get("k6_success_pct")
         ap = os.path.join(os.path.dirname(p), "arm.json")
         started = json.load(open(ap)).get("started_at", "") if os.path.exists(ap) else ""
+        pb = stats.per_block(os.path.dirname(p)) or {}
+        tot = pb.get("totalMs", {}).get("tmean10")
         rows.append(f"| {cycle} | {client} | {started[:16].replace('T', ' ')} | {k.get('expected', 'n/a')} | {k.get('qualifying_blocks', 'n/a')} | "
                     f"{k.get('tx_count', 'n/a')} | {(k.get('gas_used') or 0):,} | "
-                    f"{pct if pct is None else f'{pct:.2f}%'} | {cross_s} | {'yes' if k.get('consensus_ok') else 'no'} |")
+                    f"{pct if pct is None else f'{pct:.2f}%'} | {cross_s} | {'yes' if k.get('consensus_ok') else 'no'} | {ms(tot)} |")
     if not rows:
         return []
-    return ["| cycle | client | started (UTC) | blocks mined | qualifying | txs | gas used | k6 success | cross replay | counts |",
-            "|---|---|---|---|---|---|---|---|---|---|"] + rows + [""]
+    return ["| cycle | client | started (UTC) | blocks mined | qualifying | txs | gas used | k6 success | cross replay | counts | ms/block |",
+            "|---|---|---|---|---|---|---|---|---|---|---|"] + rows + [""]
 
 
 def main(cid):
@@ -92,7 +96,19 @@ def main(cid):
               + ".", ""]
         if "boton" in c["where"]:
             seeded = any(cfg.get("scenarios", {}).get(s, {}).get("db") == "mainnet" for s in c["scenarios"])
-            if seeded:
+            half = c.get("clients") if len(c.get("clients", [])) == 1 else None
+            if seeded and half:
+                L += [f"Boton, {half[0]} only so far: the boxes hold one client's seed at a time (295 GB volumes), "
+                      f"and this campaign ran {half[0]}'s half of the sequential design (`docs/mainnet-db-plan.md`): "
+                      "both boxes mining at the same time, each from a hard-link clone of the seed, into the "
+                      "fwd/rev layout. The other client's half runs later from the same campaign "
+                      "(`bin/lab.py run <id> --clients <client>`) after a seed swap (`bin/boton-seed.sh`), and "
+                      "the verdict comes then; until then the arm table below holds this client's per-arm "
+                      "numbers and the phase table its means. k6 runs on the box against its own node, with "
+                      "the same options and pricing rule as in Docker; the cross replays run in Docker on this "
+                      "Mac on a clone of the seed here. The boxes have 7 GB of memory where the Docker arms "
+                      "get 10 GB.", ""]
+            elif seeded:
                 L += ["Boton: the boxes hold one client's seed at a time (295 GB volumes), so the campaign ran "
                       "sequentially (`docs/mainnet-db-plan.md`): every RSKj arm first, both boxes mining at the "
                       "same time, each from a hard-link clone of the RSKj seed; then the seed swap "

@@ -18,7 +18,9 @@ bin/lab.py status [<id>]
   (`--where boton`) a cycle is two 30-minute slots with both boxes mining at once plus four
   cross replays here, about 80 minutes per cycle. On the mainnet seed the Boton campaign is
   sequential (README "Live mining"): every RSKj cycle, a seed swap of most of a day
-  (`bin/boton-seed.sh`), every rustock cycle; it is never extended.
+  (`bin/boton-seed.sh`), every rustock cycle; it is never extended. `--clients rustock` (or
+  `rskj`) runs one half with the seed the boxes hold, no verdict; `run <id> --clients <other>`
+  completes it later. Scenarios `<name>@mainnet` beyond ecdsa and mainnet-sim are live only.
   Needs the rustock adapter's live flags (`clients/rustock.json` `live_args`) and the k6 suite at
   `config.json` `mainnet_seed.k6`. A `status: failed` saying "live arm discarded" is an arm that
   measured nothing (few full blocks, k6 rejected); rerun `bin/lab.py run <id>` to repeat the cycle.

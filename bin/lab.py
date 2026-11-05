@@ -328,7 +328,11 @@ def run_boton_live(c, scen):
     d = os.path.join(c["dir"], "raw", "boton", scen)
     os.makedirs(d, exist_ok=True)
     if boton_sequential(scen):
-        for client in c.get("clients", ["rskj", "rustock"]):
+        clients = c.get("clients", ["rskj", "rustock"])
+        if len(clients) == 1:
+            log(f"boton {scen}: {clients[0]}'s half only; the other client's half runs later with "
+                f"`lab.py run {c['id']} --clients <client>` and decides the verdict", c)
+        for client in clients:
             if all(boton_unit_done(d, k, client) for k in range(1, c["cycles"] + 1)):
                 continue  # a rerun: this half is done, and its seed may be gone from the boxes
             boton_seed(c, client)

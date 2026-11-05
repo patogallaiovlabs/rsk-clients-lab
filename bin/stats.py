@@ -67,6 +67,17 @@ def boton_cycles(d):
     return out
 
 
+def runs_of(where, d, client):
+    """Every counting run of one client, paired or not: a half campaign (one client's cycles
+    now, the other's after a seed swap) still reports that client's absolute numbers."""
+    if where == "docker":
+        paths = glob.glob(os.path.join(d, f"c*-{client}"))
+    else:  # rskj: fwd/A and rev/B; rustock: rev/A and fwd/B
+        slots = ("fwd", "rev") if client == "rskj" else ("rev", "fwd")
+        paths = glob.glob(os.path.join(d, f"c*-{slots[0]}", "A")) + glob.glob(os.path.join(d, f"c*-{slots[1]}", "B"))
+    return [r for r in (per_block(p) for p in sorted(paths)) if r]
+
+
 def deltas(cycles, metric, stat):
     k = STAT_KEY[stat]
     ds = []
@@ -110,11 +121,13 @@ def judge(where, d, scenario):
             k, n, p = sign_test(x)
             out["totalMs"][stat] = {"median_pct": round(st.median(x), 2), "rustock_faster": k, "n": n, "p": p,
                                     "deltas_pct": [round(v, 2) for v in x]}
-    # Per client, the mean over runs of each phase's trimmed mean, for every phase it logs.
-    for i, name in enumerate(("rskj", "rustock")):
-        runs = [pair[i] for pairs in cycles for pair in pairs]
+    # Per client, the mean over runs of each phase's trimmed mean, for every phase it logs,
+    # over every counting run of the client (a half campaign has no pairs yet).
+    for name in ("rskj", "rustock"):
+        runs = runs_of(where, d, name)
         phases = sorted({m for r in runs for m in r})
         out["absolute_ms"][name] = {m: round(st.mean([r[m]["tmean10"] for r in runs if m in r]), 3) for m in phases}
+        out.setdefault("runs", {})[name] = len(runs)
     shared = set(out["absolute_ms"].get("rskj", {})) & set(out["absolute_ms"].get("rustock", {}))
     for m in sorted(shared - {"totalMs"}):
         x = deltas(cycles, m, "tmean")

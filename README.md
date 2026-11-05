@@ -97,7 +97,10 @@ boxes mine at the same time, one client each, natively with k6 on the box, then 
 the cross replays run in Docker here. On the mainnet seed the boxes' 295 GB volumes hold one
 client's seed at a time, so the campaign is sequential: every RSKj cycle (both boxes at once,
 each on a hard-link clone), the seed swap (`bin/boton-seed.sh <box> <client>`, most of a day),
-every rustock cycle; the report says so, and such a campaign is never extended.
+every rustock cycle; the report says so, and such a campaign is never extended. A campaign
+queued with `--clients rustock` runs one client's half with the seed the boxes hold and
+reports that client's per-arm numbers with no verdict; `bin/lab.py run <id> --clients rskj`
+later adds the other half, after the swap, and decides it.
 
 The mainnet seed (`docs/mainnet-db-plan.md`): an RSKj mainnet database with the k6 senders
 funded, in the Docker volume `config.json` names, and rustock's conversion of it beside it.

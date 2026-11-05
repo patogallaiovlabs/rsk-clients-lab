@@ -576,3 +576,57 @@ box A 8.2 h, the two uploads sharing the uplink), rustock half 3.3 h. Every arm 
 rustock 1.34x faster, 6/6 (RSKj 260.4 ms/block, rustock 192.2), beside 1.35x from the
 empty database on the same boxes (c1) and 1.38x on the seed in Docker (2026-11-02-c2):
 the seed and the 2-CPU boxes change the per-block time, not the gap.
+
+### rustock on every scenario (2026-11-05): the backlog while the boxes hold its seed
+
+Asked by the user on 2026-11-05, with rustock's seed on both boxes after `2026-11-04-c2`:
+measure rustock live on every block-processing scenario of the k6 suite, so the lab holds a
+backlog of its per-block numbers on the mainnet seed on Boton, and the RSKj halves can be
+added later with one seed swap. `config.json` gains thirteen `<name>@mainnet` scenarios,
+live only (no replay sample): storage-stress (k6 option 1), keccak-writes (2),
+block-fill-variants (5), storage-reads (6), cpu-computation (8), memory-allocation (9),
+memory-array (10), calldata-settlement (11), calldata-random (12), block-filler (15),
+worst-case-block (17), state-growth (18) and contention (19); mainnet-sim@mainnet (14) is
+the fourteenth and ecdsa@mainnet (7) is done. Left out: option 3 (mixed workload, 70% RPC
+reads), 4 (a fixed RPC endpoint), 13 (a bug reproduction) and 16 (indexer reads, an RPC
+load). Every stress scenario writes k6's custom summary with `stress_call_success_rate`,
+gated at 80% as option 7; block-filler prints the default summary with `tx_success_rate`,
+gated at 98% as mainnet-sim (`live.k6_success_metric`).
+
+One campaign per scenario, `--clients rustock`, 6 cycles: `bin/lab.py` runs rustock's half
+of the sequential design (both boxes at once from clones of its seed, into the fwd/rev
+layout), the verdict is "no data" until the RSKj half, and the report shows rustock's
+per-arm `ms/block` (a new column of the arm table) and its phase means
+(`stats.runs_of`, every counting run of a client, paired or not). The campaigns run one
+after the other from the queue (`bin/lab.py next` in a loop), about 3.3 h each, so about
+two days for fourteen. Later, with the boxes swapped back to the RSKj seed
+(`bin/boton-seed.sh <box> rskj`), `bin/lab.py run <id> --clients rskj` completes each
+campaign and decides it.
+
+The 3-minute rustock smoke of every scenario on the boxes (2026-11-05, 14:20 to 15:40 UTC)
+found four suite problems and two fullness facts, all fixed in `k6-tests` (branch
+`scenario-load-generation-fixes`, harness only) or in `config.json`:
+
+- storage-stress (1) never imported `estimateGas`, so its setup threw and no block had a
+  transaction; imported.
+- contention (19), state-growth (18) and worst-case-block (17) called the summary helper
+  with a string where it takes options, so no custom summary was written and the k6 gate
+  had no rate; fixed to `{ testName, outputDir }`.
+- The 5-minute scenarios (cpu-computation, memory-allocation, memory-array,
+  calldata-settlement, calldata-random, and storage-stress's 5m+3m pair) ignored
+  `DURATION`, so a 30-minute arm would run them six times, each redeploying its contracts
+  in `setup`; storage-reads' second iteration already failed that way in the smoke ("gas
+  price not enough to bump transaction", the deployer's nonce still pending). They now
+  honor `DURATION` like ecdsa, one iteration per arm (block-fill-variants' six 5-minute
+  phases already add up to the arm; mainnet-sim runs 1 h).
+- block-filler (15): blocks 100% full, but `tx_success_rate` was 32% to 56%: the metric
+  counts bursts of six transfers from 30 senders, cut at the first pool rejection (nonce
+  races), not the load on the block. Its gate is 25%; the qualifying-blocks check carries
+  the evidence.
+- keccak-writes (2) and contention (19) fill blocks to 22.3M of 25M (89%), worst-case-block
+  (17) alternates 23.7M and 21.3M: their `threshold` is 0.85, so their blocks qualify.
+  Every other scenario saturates (23.6M to 25.0M).
+
+perf-lab's `repos/rskj-k6-tests` holds the same content as this suite before these fixes
+under a duplicate commit of the ERC-20 fix; to take them it resets to the branch head
+(`rsk-perf-lab/TO-DO.md`).
