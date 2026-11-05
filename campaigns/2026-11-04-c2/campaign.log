@@ -1,0 +1,30 @@
+[2026-11-04T22:36:04Z] rskj fa5733f8e, rustock 2f185c8fe
+[2026-11-04T22:36:04Z] boton: staging the rskj seed on both boxes (bin/boton-seed.sh, raw/boton/seed-rskj-<box>.log)
+[2026-11-04T22:36:08Z] boton: both boxes hold the rskj seed (0 min)
+[2026-11-04T23:08:11Z] live ecdsa@mainnet A: 112 blocks mined, 64 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T23:08:11Z] live ecdsa@mainnet B: 128 blocks mined, 80 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T23:40:10Z] live ecdsa@mainnet A: 117 blocks mined, 69 qualifying, k6 100.0%, cross replay ok
+[2026-11-04T23:40:10Z] live ecdsa@mainnet B: 111 blocks mined, 63 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T00:12:02Z] live ecdsa@mainnet A: 112 blocks mined, 64 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T00:12:02Z] live ecdsa@mainnet B: 87 blocks mined, 39 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T00:44:48Z] live ecdsa@mainnet A: 116 blocks mined, 68 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T00:44:48Z] live ecdsa@mainnet B: 110 blocks mined, 62 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T01:17:35Z] live ecdsa@mainnet A: 123 blocks mined, 75 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T01:17:35Z] live ecdsa@mainnet B: 111 blocks mined, 63 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T01:50:12Z] live ecdsa@mainnet A: 115 blocks mined, 67 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T01:50:12Z] live ecdsa@mainnet B: 112 blocks mined, 64 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T01:50:12Z] boton: staging the rustock seed on both boxes (bin/boton-seed.sh, raw/boton/seed-rustock-<box>.log)
+[2026-11-05T10:02:52Z] boton: both boxes hold the rustock seed (492 min)
+[2026-11-05T10:38:00Z] live ecdsa@mainnet A: 105 blocks mined, 55 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T10:38:00Z] live ecdsa@mainnet B: 122 blocks mined, 73 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T11:10:33Z] live ecdsa@mainnet A: 101 blocks mined, 52 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T11:10:34Z] live ecdsa@mainnet B: 103 blocks mined, 54 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T11:43:06Z] live ecdsa@mainnet A: 116 blocks mined, 66 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T11:43:06Z] live ecdsa@mainnet B: 125 blocks mined, 76 qualifying, k6 97.7%, cross replay ok
+[2026-11-05T12:15:39Z] live ecdsa@mainnet A: 118 blocks mined, 68 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T12:15:39Z] live ecdsa@mainnet B: 116 blocks mined, 67 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T12:48:10Z] live ecdsa@mainnet A: 138 blocks mined, 89 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T12:48:11Z] live ecdsa@mainnet B: 124 blocks mined, 74 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T13:20:34Z] live ecdsa@mainnet A: 105 blocks mined, 56 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T13:20:34Z] live ecdsa@mainnet B: 108 blocks mined, 59 qualifying, k6 100.0%, cross replay ok
+[2026-11-05T13:20:34Z] boton ecdsa@mainnet after 6 sequential cycles: rustock faster (rustock faster in 6/6 cycles, median -25.10%, sign-test p=0.03125)

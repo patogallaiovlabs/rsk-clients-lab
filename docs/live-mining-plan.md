@@ -570,6 +570,9 @@ because the clone made with `sudo cp -al` kept the seed's owner (perf-lab's `rsk
 the arm runs as `ubuntu`. The remote script now chowns the clone's directories and copied
 files to the arm's user; the hard-linked `.sst` stay read-only and the seed's. The second
 attempt opened at #9003567 in about 30 s, mined 7 and 12 blocks, and rustock replayed box
-B's 12 blocks on its seed clone in Docker with matching hashes. Campaign: `2026-11-04-c2`
-(queued and started 22:36 UTC; RSKj half, swap, rustock half; verdict expected late on
-2026-11-06 UTC).
+B's 12 blocks on its seed clone in Docker with matching hashes. Campaign: `2026-11-04-c2`,
+started 22:36 UTC, done 13:20 UTC on 2026-11-05: RSKj half 3.2 h, swap 8.2 h (box B 5 h,
+box A 8.2 h, the two uploads sharing the uplink), rustock half 3.3 h. Every arm counted.
+rustock 1.34x faster, 6/6 (RSKj 260.4 ms/block, rustock 192.2), beside 1.35x from the
+empty database on the same boxes (c1) and 1.38x on the seed in Docker (2026-11-02-c2):
+the seed and the 2-CPU boxes change the per-block time, not the gap.
